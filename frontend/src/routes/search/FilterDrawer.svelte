@@ -22,11 +22,7 @@
     let storeFilter = {
         label: "Store",
         options: [
-            { value: "amazon", label: "Amazon", checked: true },
-            { value: "apple", label: "Apple", checked: true },
-            { value: "google", label: "Google", checked: true },
-            { value: "kobo", label: "Kobo", checked: true },
-            { value: "barnes", label: "Barnes & Noble", checked: true },
+            { value: "Islamic Bookstore", label: "Islamic Bookstore", checked: true },
         ],
     };
 

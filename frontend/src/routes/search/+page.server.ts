@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({url}) => {
     if (query === null) {
         throw redirect(301, '/');
     }
-    const res = await fetch(`${apiUrl}search?search=${encodeURI(query)}`);
+    const res = await fetch(`${apiUrl}search?` + url.searchParams.toString());
 
     const data: Book[] = await res.json();
 

@@ -27,6 +27,7 @@
             console.log(search); // Log the current search term for debugging
             let query = new URLSearchParams($page.url.searchParams.toString());
             query.set("search", search); // Update the search query parameter
+            query.set("sort", sortByValue); // Update the sort query parameter
             loading = false; // Hide loading indicator
             goto(`?${query.toString()}`, {
                 keepFocus: true, // Keep focus on the input field
@@ -57,6 +58,7 @@
                 Filters
             </Button>
             <Select
+                on:change={updateSearch}
                 class="mt-3"
                 size={"md"}
                 placeholder={"Sort by"}
