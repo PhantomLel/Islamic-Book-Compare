@@ -1,10 +1,11 @@
 <script lang="ts">
-    import { Button, Search, Select, Label } from "flowbite-svelte";
+    import { Button, Search, Select, Label, Checkbox } from "flowbite-svelte";
     import { FilterOutline } from "flowbite-svelte-icons";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
-    import { goto } from "$app/navigation";
+    import Pagination from "./Pagination.svelte";
+    import { goto, replaceState, } from "$app/navigation";
     import FilterDrawer from "./FilterDrawer.svelte";
 
     // The data prop is provided by the parent component
@@ -14,30 +15,50 @@
     let search = data.props.search;
 
     // State variables for sorting and filtering
-    let sortByValue = "low"; // Default sort option
+    let sortByValue = $page.params.sort || "low"; // Default sort option
+    let instock = $page.params.instock === "true"; // Default instock filter
     let timer: number; // Timer for debouncing search input
     let loading = false; // Flag to indicate loading state
     let filtersHidden = true; // Flag to control the visibility of the filter drawer
 
+    let show = parseInt($page.params.show) || 15 // Number of results to show per page
+
+    let pageNum: number = parseInt($page.params.page) || 1;
+    $: pageNum = parseInt($page.params.page) || 1;
+
+    let range: number[]; 
+    $: range = [(pageNum - 1) * show, pageNum * show > data.props.results.length ? data.props.results.length : pageNum * show]
+
+    $: trimmed = data.props.results.slice(range[0], range[1]);
+
     // Function to update the search query with a debounce effect
-    const updateSearch = () => {
+    const updateSearch = (reload = true) => {
         loading = true; // Show loading indicator
         clearTimeout(timer); // Clear any existing timer
         timer = setTimeout(() => {
-            console.log(search); // Log the current search term for debugging
+            loading = false; // Hide loading indicator
+
             let query = new URLSearchParams($page.url.searchParams.toString());
             query.set("search", search); // Update the search query parameter
             query.set("sort", sortByValue); // Update the sort query parameter
-            loading = false; // Hide loading indicator
-            goto(`?${query.toString()}`, {
-                keepFocus: true, // Keep focus on the input field
-            });
-        }, 400); // Wait 400 milliseconds before updating the URL
+            query.set("show", show.toString()); // Update the show query parameter
+            query.set("instock", instock.toString()); // Update the instock query parameter
+
+            if (reload) {
+                // Reload the page with the updated query parameters
+                goto(`?${query.toString()}`, {
+                    keepFocus: true, // Keep focus on the input field
+                });
+            } else {
+                replaceState(`?${query.toString()}`, $page.state);
+            }
+        }, 400); 
     };
+
 </script>
 
-<div class="h-screen justify-center">
-    <div class="bg-gray-800 p-6 m-5 rounded-xl">
+<div class="h-screen">
+    <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-3/4">
         <div class="gap-2 flex">
             <Search
                 required
@@ -58,7 +79,7 @@
                 Filters
             </Button>
             <Select
-                on:change={updateSearch}
+                on:change={() => updateSearch()}
                 class="mt-3"
                 size={"md"}
                 placeholder={"Sort by"}
@@ -70,38 +91,55 @@
                 ]}
             />
         </div>
-        <div class="flex gap-3 mt-3">
+        <div class="flex gap-6 mt-3">
+            <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
+                Hide Out of Stock
+            </Checkbox>
             <Label>
                 Show per page
                 <Select
+                    bind:value={show}
+                    on:change={() => updateSearch(false)}
                     class="mt-3"
                     size={"md"}
-                    placeholder={"10"}
                     items={[
-                        { value: "10", name: "10" },
-                        { value: "20", name: "20" },
-                        { value: "50", name: "50" },
+                        { value: 15, name: "15" },
+                        { value: 45, name: "45" },
+                        { value: 75, name: "75" },
                     ]}
                 />
             </Label>
         </div>
     </div>
 
+    <div class="flex justify-center">
     <!-- Display a message if no search results are found -->
     {#if data.props.results.length === 0}
         <h1 class="text-2xl ml-5 mb-3 text-white mt-12 font-bold">
             No results found
         </h1>
+        
     {:else}
-        <!-- Display the number of search results -->
-        <h1 class="text-xl ml-5 mb-3 text-white mt-12 font-bold">
-            Search Result{data.props.results.length > 1 ? "s" : ""}: {data.props.results.length}
-        </h1>
+        <Pagination 
+        
+        {pageNum}
+        helper={
+            {
+                start: range[0] + 1,
+                end: range[1],
+                total: data.props.results.length
+            }
+        } />
     {/if}
+    </div>
     <!-- Render a BookCard for each result -->
-    {#each data.props.results as book}
-        <BookCard {book} {loading} />
-    {/each}
+     <div class="flex flex-wrap justify-center">
+        {#each trimmed as book}
+            {#if instock && book.instock || !instock}
+                <BookCard {book} {loading} />
+            {/if}
+        {/each}
+     </div>
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->

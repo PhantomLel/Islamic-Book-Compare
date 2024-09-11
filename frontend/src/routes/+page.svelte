@@ -7,10 +7,11 @@
 </script>
 
 <div
+    class="h-screen"
     style="background-image: url(https://cdn.modrinth.com/landing-new/landing.webp); background-size: cover; padding-bottom: 10rem;"
 >
-    <div class=" flex justify-center items-center">
-        <div class="text-center sm:w-1/2 w-10/12 mt-24">
+    <div class=" flex justify-center items-center h-screen">
+        <div class="text-center sm:w-1/2 w-10/12 ">
             <h1 class=" sm:text-6xl text-4xl font-bold text-white mb-6">
                 Islamic Book Search
             </h1>
@@ -35,10 +36,10 @@
                     size={"lg"}>Search</Button
                 >
             </form>
-            <h1 class="text-3xl text-white mt-12 font-bold">Featured Books</h1>
+            <!-- <h1 class="text-3xl text-white mt-12 font-bold">Featured Books</h1> -->
         </div>
     </div>
-    <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4"></div>
+    <!-- <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4"></div>
     <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4">
         {#each data.props.featured as book}
             <Card class="sm:min-w-1/6 sm:w-64 sm:h-96 h-72 w-5/12 mt-4">
@@ -58,5 +59,5 @@
                 </div>
             </Card>
         {/each}
-    </div>
+    </div> -->
 </div>

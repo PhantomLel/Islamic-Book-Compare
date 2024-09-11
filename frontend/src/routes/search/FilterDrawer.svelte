@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { Drawer, Button, Search, Hr, Checkbox } from "flowbite-svelte";
+    import { Drawer, Search, Hr, Checkbox } from "flowbite-svelte";
     import { onMount } from "svelte";
     import { sineIn } from "svelte/easing";
 
@@ -23,6 +23,7 @@
         label: "Store",
         options: [
             { value: "Islamic Bookstore", label: "Islamic Bookstore", checked: true },
+            { value: "Zakariyya Books", label: "Zakariyya Books", checked: true },
         ],
     };
 
@@ -45,9 +46,9 @@
         let exclude = storeFilter.options
             .filter((option) => !option.checked)
             .map((option) => option.value);
+        
+        query.delete("exclude"); // Remove the "exclude" parameter if no options are unchecked
 
-        // Remove existing "exclude" parameters and add the updated ones
-        query.delete("exclude");
         exclude.forEach((value) => {
             query.append("exclude", value);
         });

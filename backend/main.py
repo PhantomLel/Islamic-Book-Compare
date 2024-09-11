@@ -1,6 +1,9 @@
 import random
+import typing
+from typing import Annotated
 from tinydb import TinyDB, Query
 from fastapi import FastAPI
+from fastapi import Query as fQuery
 import re
 import time
 
@@ -78,12 +81,24 @@ fake_class_lists = [
 app.db = TinyDB("backend/db/db.json")
 @app.on_event("startup")
 def get_db():
-    app.db.truncate()
-    app.db.insert_multiple(fake_book_data)
+    pass
 
 @app.get("/search")
-def search_books(search: str):
-    result = app.db.search(Query().title.search(search, flags=re.IGNORECASE))
+async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = None, sort: str = "low", instock: bool = False):
+    result = app.db.search(Query().title.search(search, flags=re.IGNORECASE) | Query().author.search(search, flags=re.IGNORECASE))
+
+    if sort == "low":
+        result = sorted(result, key=lambda x: x["price"])
+    elif sort == "high":
+        result = sorted(result, key=lambda x: x["price"], reverse=True)
+
+    if instock:
+        result = [book for book in result if book["instock"]]
+
+    if exclude:
+        result = [book for book in result if book["source"] not in exclude]
+            
+
     return result
 
 @app.get("/featured")
