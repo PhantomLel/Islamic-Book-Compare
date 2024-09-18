@@ -6,7 +6,7 @@ export type Book = {
     title: string;
     author: string; 
     publisher: string;
-    img: string;
+    image : string;
     price: number;
     url: string;
     source: string;

@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --host",
-		"start": "concurrently \"npm run dev --open\" \"cd .. && fastapi dev backend/main.py\"",
+		"start": "concurrently \"npm run dev --open\" \"cd .. && python3 -m fastapi dev backend/main.py\"",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

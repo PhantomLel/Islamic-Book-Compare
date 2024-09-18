@@ -39,8 +39,8 @@
             <!-- <h1 class="text-3xl text-white mt-12 font-bold">Featured Books</h1> -->
         </div>
     </div>
-    <!-- <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4"></div>
-    <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4">
+    <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4"></div>
+    <!-- <div class="flex justify-center items-center flex-wrap mt-8 gap-x-4">
         {#each data.props.featured as book}
             <Card class="sm:min-w-1/6 sm:w-64 sm:h-96 h-72 w-5/12 mt-4">
                 <img

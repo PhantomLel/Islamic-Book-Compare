@@ -9,22 +9,27 @@
 
 {#if !loading}
     <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4">
-        <img
-            on:click={() => {
-                // open book.link
-                window.open(book.url, "_blank");
-            }}
-            src={book.img}
-            alt="book"
-            class="object-scale-down w-32 mb-2"
-        />
+        {#if  book.image }
+            <img
+                on:click={() => {
+                    // open book.link
+                    window.open(book.url, "_blank");
+                }}
+                src={ book.image}
+                alt="book"
+                class="object-scale-down w-32 mb-2"
+            />
+        {:else}
+            <ImagePlaceholder imgOnly={true} class="w-32" />
+        {/if}
+
         <div>
             <h1 class="text-sm text-white font-semibold">
                 {book.title.substring(0, 70) +
                     (book.title.length > 70 ? "..." : "")}
             </h1>
             <p class="sm:text-sm text-sm text-slate-300">
-                {book.author.substring(0, 15)}
+                {book.author === undefined ? "" : book.author.substring(0, 15)}
             </p>
             {#if book.publisher}
                 <p class="sm:text-sm
@@ -39,7 +44,7 @@
             <p
                 class="sm:text-sm text-lg mt-2 text-white font-bold align-text-bottom"
             >
-                ${book.price.toFixed(2)}
+                ${ book.price ? book.price.toFixed(2) : "N/A" }
             </p>
             <p class="mt-4">
                 {#if book.instock}

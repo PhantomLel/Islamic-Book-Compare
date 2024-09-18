@@ -23,11 +23,11 @@
     </div>
   
     <Pagination table large>
-      <a href={pageNum- 1 < 0 ? "#" : ("#" + (pageNum)) } slot="prev" class="flex items-center gap-2 text-white bg-gray-800">
+      <a target="_self" href={pageNum- 1 < 1 ? "#1" : ("#" + (pageNum-1)) } slot="prev" class="flex items-center gap-2 text-white bg-gray-800">
         <ArrowLeftOutline class="w-3.5 h-3.5 me-2" />
         Prev
       </a>
-      <a href={pageNum + 1 > helper.end ? "" : ("#" + (pageNum + 1) )} slot="next" class="flex items-center gap-2 text-white bg-gray-800">
+      <a target="_self" href={pageNum + 1 > helper.end ? "" : ("#" + (pageNum + 1) )} slot="next" class="flex items-center gap-2 text-white bg-gray-800">
         Next
         <ArrowRightOutline class="w-6 h-6 me-2" />
       </a>
