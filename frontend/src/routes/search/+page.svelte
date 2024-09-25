@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Button, Search, Select, Label, Checkbox } from "flowbite-svelte";
-    import { FilterOutline } from "flowbite-svelte-icons";
+    import FilterOutline  from "flowbite-svelte-icons/FilterOutline.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -29,7 +29,6 @@
 
     $: {
         pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
-        console.log(pageNum);
 
         if (
             pageNum < 1 ||
@@ -68,6 +67,7 @@
             query.set("sort", sortByValue); // Update the sort query parameter
             query.set("show", show.toString()); // Update the show query parameter
             query.set("instock", instock.toString()); // Update the instock query parameter
+            query.set("page", "1"); // Reset the page number to 1
 
             if (reload) {
                 // Reload the page with the updated query parameters
@@ -127,7 +127,7 @@
                 Show per page
                 <Select
                     bind:value={show}
-                    on:change={() => updateSearch(false)}
+                    on:change={() => updateSearch()}
                     class="mt-3"
                     size={"md"}
                     items={[

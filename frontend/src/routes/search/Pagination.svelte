@@ -1,7 +1,8 @@
 <script lang="ts">
     import { Pagination } from 'flowbite-svelte';
     import { page } from '$app/stores';
-    import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons';
+    import ArrowLeftOutline from 'flowbite-svelte-icons/ArrowLeftOutline.svelte';
+    import ArrowRightOutline from 'flowbite-svelte-icons/ArrowRightOutline.svelte';
     import { goto } from '$app/navigation';
     import { createEventDispatcher } from 'svelte';
 
