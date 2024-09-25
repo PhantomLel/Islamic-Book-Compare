@@ -8,7 +8,7 @@
 </script>
 
 {#if !loading}
-    <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4">
+    <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full">
         {#if  book.image }
             <img
                 on:click={() => {

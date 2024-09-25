@@ -12,16 +12,17 @@
     export let data: PageData;
 
     // Initialize the search term from the provided data
-    let search = data.props.search;
+    let search = $page.url.searchParams.get("search") || "";
 
     // State variables for sorting and filtering
-    let sortByValue = $page.params.sort || "low"; // Default sort option
-    let instock = $page.params.instock === "true"; // Default instock filter
+    let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
+    let instock = $page.url.searchParams.get("instock") === "true"; // Default instock filter
+
     let timer: number; // Timer for debouncing search input
     let loading = false; // Flag to indicate loading state
     let filtersHidden = true; // Flag to control the visibility of the filter drawer
 
-    let show = parseInt($page.params.show) || 15; // Number of results to show per page
+    let show = parseInt($page.url.searchParams.get("show") ?? "15") // Number of results to show per page
 
     let pageNum: number; //= parseInt($page.url.hash.replace("#", "")) || 1;
 

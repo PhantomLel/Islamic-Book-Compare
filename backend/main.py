@@ -1,14 +1,19 @@
+import pymongo
 from typing import Annotated
 from tinydb import TinyDB, Query
 from fastapi import FastAPI
 from fastapi import Query as fQuery
 from db.db import get_db
+import re
+
 
 app = FastAPI()
 db = get_db()
 
 @app.get("/search")
 async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = None, sort: str = "low", instock: bool = False):
+
+    search = re.escape(search.strip())
     if search == "":
         return []
     
@@ -16,6 +21,7 @@ async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = 
                [
         {"title": {"$regex": search, "$options": "i"}},
         {"author": {"$regex": search, "$options": "i"}},
+        {"description": {"$regex": search, "$options": "i"}},
     ]}]
 
     if instock:
@@ -29,15 +35,16 @@ async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = 
    )
 
     if sort == "low":
-        result = sorted(result, key=lambda x: x["price"] if "price" in x else 0)
+        # result = sorted(result, key=lambda x: x["price"] if "price" in x else 0)
+        result = result.sort("price", pymongo.ASCENDING)
     elif sort == "high":
-        result = sorted(result, key=lambda x: x["price"] if "price" in x else 0, reverse=True)
+        result = result.sort("price", pymongo.DESCENDING)
 
     if exclude:
         result = [book for book in result if book["source"] not in exclude]
             
 
-    return result
+    return list(result)
 
 @app.get("/featured")
 def get_books():
