@@ -11,7 +11,7 @@ app = FastAPI()
 db = get_db()
 
 @app.get("/search")
-async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = None, sort: str = "low", instock: bool = False):
+async def search_books( search: str, page: int = 1, show: int = 15, exclude: Annotated[list | None, fQuery()] = None, sort: str = "low", instock: bool = False):
 
     search = re.escape(search.strip())
     if search == "":
@@ -42,9 +42,22 @@ async def search_books(search: str, exclude: Annotated[list | None, fQuery()] = 
 
     if exclude:
         result = [book for book in result if book["source"] not in exclude]
-            
 
-    return list(result)
+    # using page and show slice the results to paginate it
+    result = list(result)
+    total = len(result)
+    start = (page -1) * show
+    end = page * show if page * show <= total else total
+
+    result = result[start : end]
+
+
+    return {
+        "results": result,
+        "total": total,
+        "end" : end,
+        "start": start,
+    }
 
 @app.get("/featured")
 def get_books():

@@ -1,6 +1,9 @@
 <script lang="ts">
     import { Pagination } from 'flowbite-svelte';
+    import { page } from '$app/stores';
     import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons';
+    import { goto } from '$app/navigation';
+    import { createEventDispatcher } from 'svelte';
 
     export let helper: {
         start: number;
@@ -9,6 +12,16 @@
     };
 
     export let pageNum: number;
+
+
+    const setPage = (page: number) => {
+      let query = new URLSearchParams($page.url.searchParams.toString());
+      query.set("page", page.toString());
+
+      goto(`?${query.toString()}`, {
+          keepFocus: true, // Keep focus on the input field
+      });
+    }
 
 </script>
 
@@ -23,11 +36,11 @@
     </div>
   
     <Pagination table large>
-      <a target="_self" href={pageNum- 1 < 1 ? "#1" : ("#" + (pageNum-1)) } slot="prev" class="flex items-center gap-2 text-white bg-gray-800">
+      <a target="_self" on:click={() => setPage(pageNum- 1 < 1 ? 1 : (pageNum-1))  } slot="prev" class="flex items-center gap-2 text-white bg-gray-800">
         <ArrowLeftOutline class="w-3.5 h-3.5 me-2" />
         Prev
       </a>
-      <a target="_self" href={pageNum + 1 > helper.end ? "" : ("#" + (pageNum + 1) )} slot="next" class="flex items-center gap-2 text-white bg-gray-800">
+      <a target="_self" on:click={() => setPage(pageNum + 1 > helper.end ? pageNum : (pageNum + 1))} slot="next" class="flex items-center gap-2 text-white bg-gray-800">
         Next
         <ArrowRightOutline class="w-6 h-6 me-2" />
       </a>

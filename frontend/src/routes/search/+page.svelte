@@ -5,8 +5,9 @@
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
     import Pagination from "./Pagination.svelte";
-    import { goto, replaceState } from "$app/navigation";
+    import { afterNavigate, beforeNavigate, goto, replaceState } from "$app/navigation";
     import FilterDrawer from "./FilterDrawer.svelte";
+    import Layout from "../+layout.svelte";
 
     // The data prop is provided by the parent component
     export let data: PageData;
@@ -27,26 +28,26 @@
     let pageNum: number; //= parseInt($page.url.hash.replace("#", "")) || 1;
 
     $: {
-        pageNum = parseInt($page.url.hash.replace("#", "")) || 1;
+        pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
+        console.log(pageNum);
 
         if (
             pageNum < 1 ||
-            pageNum > Math.ceil(data.props.results.length / show)
+            pageNum > Math.ceil(data.props.total / show)
         ) {
-            pageNum = Math.ceil(data.props.results.length / show);
-            window.location.hash = pageNum.toString();
+            pageNum = Math.ceil(data.props.total / show);
+            $page.url.searchParams.set("page", pageNum.toString());
         }
     }
 
-    let range: number[];
-    $: range = [
-        (pageNum - 1) * show,
-        pageNum * show > data.props.results.length
-            ? data.props.results.length
-            : pageNum * show,
-    ];
 
-    $: trimmed = data.props.results.slice(range[0], range[1]);
+    afterNavigate(() => {
+        loading = false;
+    });
+
+    beforeNavigate(() => {
+        loading = true;
+    });
 
     // Function to update the search query with a debounce effect
     const updateSearch = (reload = true) => {
@@ -149,28 +150,28 @@
             <Pagination
                 {pageNum}
                 helper={{
-                    start: range[0] + 1,
-                    end: range[1],
-                    total: data.props.results.length,
+                    start: data.props.start,
+                    end: data.props.end,
+                    total: data.props.total,
                 }}
             />
         {/if}
     </div>
     <!-- Render a BookCard for each result -->
     <div class="flex flex-wrap justify-center">
-        {#each trimmed as book}
+        {#each data.props.results as book}
             {#if (instock && book.instock) || !instock}
                 <BookCard {book} {loading} />
             {/if}
         {/each}
     </div>
-    {#if data.props.results.length > 0}
+    {#if data.props.results.length > 10}
     <Pagination
         {pageNum}
         helper={{
-            start: range[0] + 1,
-            end: range[1],
-            total: data.props.results.length,
+            start: data.props.start,
+            end: data.props.end,
+            total: data.props.total,
         }}
     />
     {/if}

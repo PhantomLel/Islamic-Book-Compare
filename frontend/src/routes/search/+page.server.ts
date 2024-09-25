@@ -11,12 +11,14 @@ export const load: PageServerLoad = async ({url}) => {
     }
     const res = await fetch(`${apiUrl}search?` + url.searchParams.toString());
 
-    const data: Book[] = await res.json();
+    const data: {
+        results : Book[],
+        total : number,
+        end : number,
+        start : number,
+    } = await res.json();
 
     return {
-        props: {
-            search: query,
-            results: data
-        }
+        props: data
     }
 };
