@@ -4,11 +4,11 @@ import { error, redirect, type Actions } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async () => {
 
-  let data = await  fetch(apiUrl + "featured");
+  let data = await  fetch(apiUrl + "totalBooks");
   let json = await data.json();
   return {
     props: {
-      featured: json
+      total : json.total
     }
   }
 };

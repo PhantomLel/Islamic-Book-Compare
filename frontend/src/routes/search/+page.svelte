@@ -7,7 +7,7 @@
     import Pagination from "./Pagination.svelte";
     import { afterNavigate, beforeNavigate, goto, replaceState } from "$app/navigation";
     import FilterDrawer from "./FilterDrawer.svelte";
-    import Layout from "../+layout.svelte";
+
 
     // The data prop is provided by the parent component
     export let data: PageData;
@@ -23,7 +23,8 @@
     let loading = false; // Flag to indicate loading state
     let filtersHidden = true; // Flag to control the visibility of the filter drawer
 
-    let show = parseInt($page.url.searchParams.get("show") ?? "15") // Number of results to show per page
+    let show = parseInt($page.url.searchParams.get("show") ?? "15");
+    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" || $page.url.searchParams.get("searchDesc") === null; // Default to true
 
     let pageNum: number; //= parseInt($page.url.hash.replace("#", "")) || 1;
 
@@ -53,26 +54,26 @@
         clearTimeout(timer); // Clear any existing timer
 
         if (search === "") {
-            // If the search term is empty, reset the timer and return
             loading = false;
             return;
         }
 
-        loading = true; // Show loading indicator
+        loading = true; 
         timer = setTimeout(() => {
-            loading = false; // Hide loading indicator
+            loading = false; 
 
             let query = new URLSearchParams($page.url.searchParams.toString());
-            query.set("search", search); // Update the search query parameter
-            query.set("sort", sortByValue); // Update the sort query parameter
-            query.set("show", show.toString()); // Update the show query parameter
-            query.set("instock", instock.toString()); // Update the instock query parameter
-            query.set("page", "1"); // Reset the page number to 1
+            query.set("search", search); 
+            query.set("sort", sortByValue); 
+            query.set("show", show.toString()); 
+            query.set("instock", instock.toString()); 
+            query.set("searchDesc", searchDesc.toString());
+            query.set("page", "1"); 
 
             if (reload) {
                 // Reload the page with the updated query parameters
                 goto(`?${query.toString()}`, {
-                    keepFocus: true, // Keep focus on the input field
+                    keepFocus: true, 
                 });
             } else {
                 replaceState(`?${query.toString()}`, $page.state);
@@ -85,6 +86,7 @@
     <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-3/4">
         <div class="gap-2 flex">
             <Search
+                id={"search"}
                 required
                 on:input={(e) => {
                     updateSearch(); // Call updateSearch on input change
@@ -122,6 +124,9 @@
         <div class="flex gap-6 mt-3">
             <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
                 Hide Out of Stock
+            </Checkbox>
+            <Checkbox bind:checked={searchDesc} on:change={() => updateSearch()}>
+                Search Description
             </Checkbox>
             <Label>
                 Show per page
@@ -165,7 +170,7 @@
             {/if}
         {/each}
     </div>
-    {#if data.props.results.length > 10}
+    {#if data.props.results.length > 10 || window.innerWidth < 768}
     <Pagination
         {pageNum}
         helper={{

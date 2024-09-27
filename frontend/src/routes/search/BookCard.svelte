@@ -8,19 +8,20 @@
 </script>
 
 {#if !loading}
-    <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full">
+    <a
+    href={book.url}
+    target="_blank"
+    class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full cursor-pointer">
         {#if  book.image }
             <img
-                on:click={() => {
-                    // open book.link
-                    window.open(book.url, "_blank");
-                }}
                 src={ book.image}
                 alt="book"
                 class="object-scale-down w-32 mb-2"
             />
         {:else}
-            <ImagePlaceholder imgOnly={true} class="w-32" />
+            <ImagePlaceholder 
+            
+            imgOnly={true} class="w-32" />
         {/if}
 
         <div>
@@ -54,7 +55,7 @@
                 {/if}
             </p>
         </div>
-    </div>
+    </a>
 {:else}
     <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3">
         <ImagePlaceholder imgOnly class="w-32" />

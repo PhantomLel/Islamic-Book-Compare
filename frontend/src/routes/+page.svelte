@@ -16,7 +16,7 @@
                 Islamic Book Search
             </h1>
             <p class="text-slate-300 sm:text-lg text-md mb-8">
-                Find the best prices from dozens of Islamic Bookstores
+                Search from a collection of <span class="font-bold text-white">{data.props.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span> Islamic books from dozens of popular bookstores.
             </p>
             <form method="POST" use:enhance>
                 <Search
