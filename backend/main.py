@@ -24,7 +24,7 @@ async def search_books(
     show: int = 15,
     exclude: Annotated[list | None, fQuery()] = None,
     sort: str = "low",
-    instock: bool = False,
+    instock: bool = True,
     searchDesc: bool = True,
 ):
 
