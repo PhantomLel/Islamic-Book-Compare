@@ -6,6 +6,7 @@
     export let data: PageData;
 </script>
 
+<title>Islamic Book Search</title>
 <div
     class="h-screen"
     style="background-image: url(https://cdn.modrinth.com/landing-new/landing.webp); background-size: cover; padding-bottom: 10rem;"
@@ -16,7 +17,7 @@
                 Islamic Book Search
             </h1>
             <p class="text-slate-300 sm:text-lg text-md mb-8">
-                Search from a collection of <span class="font-bold text-white">{data.props.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span> Islamic books from dozens of popular bookstores.
+                Search from a collection of <span class="font-bold text-white">{data.props.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span> Islamic books from popular bookstores.
             </p>
             <form method="POST" use:enhance>
                 <Search

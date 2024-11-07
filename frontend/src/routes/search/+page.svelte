@@ -1,19 +1,28 @@
 <script lang="ts">
-    import { Button, Search, Select, Label, Checkbox } from "flowbite-svelte";
+    import { Button, Search, Select, Label, Checkbox, FloatingLabelInput, Spinner} from "flowbite-svelte";
     import FilterOutline  from "flowbite-svelte-icons/FilterOutline.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
     import Pagination from "./Pagination.svelte";
-    import { afterNavigate, beforeNavigate, goto, replaceState } from "$app/navigation";
+    import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
+    import { onMount } from "svelte";
     import FilterDrawer from "./FilterDrawer.svelte";
 
 
     // The data prop is provided by the parent component
     export let data: PageData;
+    
+    let innerWidth: number;
+
+    onMount(() => {
+        innerWidth = window.innerWidth;
+    });
+
 
     // Initialize the search term from the provided data
     let search = $page.url.searchParams.get("search") || "";
+    let author = $page.url.searchParams.get("author") || "";
 
     // State variables for sorting and filtering
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
@@ -50,54 +59,71 @@
     });
 
     // Function to update the search query with a debounce effect
-    const updateSearch = (reload = true) => {
+    const updateSearch = () => {
+        console.log(search, author);
         clearTimeout(timer); // Clear any existing timer
 
-        if (search === "") {
+        if (search === "" && author === "") {
             loading = false;
+            console.log("No search or author");
             return;
         }
 
-        loading = true; 
         timer = setTimeout(() => {
-            loading = false; 
 
             let query = new URLSearchParams($page.url.searchParams.toString());
             query.set("search", search); 
+
+            query.set("author", author); 
+
             query.set("sort", sortByValue); 
             query.set("show", show.toString()); 
             query.set("instock", instock.toString()); 
             query.set("searchDesc", searchDesc.toString());
             query.set("page", "1"); 
 
-            if (reload) {
-                // Reload the page with the updated query parameters
-                goto(`?${query.toString()}`, {
-                    keepFocus: true, 
-                });
-            } else {
-                replaceState(`?${query.toString()}`, $page.state);
-            }
-        }, 400);
+            // Reload the page with the updated query parameters
+            goto(`?${query.toString()}`, {
+                keepFocus: true, 
+            });
+        }, 200);
     };
 </script>
 
+<title> {search ? search : author ? author : "Search"} | Islamic Book Search </title>
 <div class="pb-12">
-    <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-3/4">
-        <div class="gap-2 flex">
-            <Search
+    <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-1/2">
+        <div class="gap-2 flex sm:flex-nowrap flex-wrap">
+            <div class="sm:w-3/4">
+
+            <FloatingLabelInput
                 id={"search"}
                 required
                 on:input={(e) => {
                     updateSearch(); // Call updateSearch on input change
                 }}
                 bind:value={search}
+                classInput={"w-full"}
                 autocomplete={"off"}
                 name={"search"}
-                size={"md"}
-                placeholder={"Search for a book"}
-                class="font-semibold"
-            />
+                style={"filled"}
+            >
+            Title
+            </FloatingLabelInput>
+            </div>
+            <FloatingLabelInput
+                id={"author"}
+                bind:value={author}
+                on:input={(e) => {
+                    updateSearch(); // Call updateSearch on input change
+                }}
+                cla
+                autocomplete={"off"}
+                name={"author"}
+                style={"filled"}
+            >
+                Author
+            </FloatingLabelInput>
         </div>
         <div class="flex justify-between gap-2">
             <Button
@@ -121,7 +147,7 @@
                 ]}
             />
         </div>
-        <div class="flex gap-6 mt-3">
+        <div class="flex gap-6 mt-3 flex-wrap">
             <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
                 Hide Out of Stock
             </Checkbox>
@@ -133,7 +159,7 @@
                 <Select
                     bind:value={show}
                     on:change={() => updateSearch()}
-                    class="mt-3"
+                    class="mt-2"
                     size={"md"}
                     items={[
                         { value: 15, name: "15" },
@@ -146,11 +172,17 @@
     </div>
 
     <div class="flex justify-center">
-        <!-- Display a message if no search results are found -->
+
         {#if data.props.results.length === 0}
-            <h1 class="text-2xl ml-5 mb-3 text-white mt-12 font-bold">
-                No results found
-            </h1>
+        <div class="flex flex-col items-center">
+            {#if loading}
+                <Spinner color="purple" class="h-24 w-24 mt-24"/>
+            {:else}
+                <h1 class="text-2xl ml-5 mb-3 text-white mt-12 font-bold">
+                    No results found
+                </h1>
+            {/if}
+        </div>
         {:else}
             <Pagination
                 {pageNum}
@@ -162,18 +194,18 @@
             />
         {/if}
     </div>
-    <!-- Render a BookCard for each result -->
-    <div class="flex flex-wrap justify-center">
+        <!-- Render a BookCard for each result -->
+        <div class="flex flex-wrap justify-center">
         {#each data.props.results as book}
             {#if (instock && book.instock) || !instock}
-                <BookCard {book} {loading} />
-            {/if}
-        {/each}
-    </div>
-    {#if data.props.results.length > 10 || window.innerWidth < 768}
-    <Pagination
-        {pageNum}
-        helper={{
+                    <BookCard {book} {loading} />
+                {/if}
+            {/each}
+        </div>
+    {#if data.props.results.length > 1 || innerWidth < 768}
+        <Pagination
+            {pageNum}
+            helper={{
             start: data.props.start,
             end: data.props.end,
             total: data.props.total,
@@ -183,4 +215,4 @@
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
-<FilterDrawer bind:hidden={filtersHidden} />
+<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} />

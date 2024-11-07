@@ -1,10 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { Drawer, Search, Hr, Checkbox } from "flowbite-svelte";
+    import { Drawer, Search, Hr, Checkbox, Button } from "flowbite-svelte";
     import { onMount } from "svelte";
     import { sineIn } from "svelte/easing";
+    import { page } from "$app/stores";
 
     export let hidden = true;
+    export let stores: string[] = [];
+    console.log(stores)
 
     let filterSearch = "";
 
@@ -16,15 +19,12 @@
     };
 
     // Extract the "exclude" search parameters from the current URL
-    let storeExclude = new URLSearchParams(location.search).getAll("exclude");
+    let storeExclude = new URLSearchParams($page.url.searchParams).getAll("exclude");
 
     // Define the store filter options and their default states
     let storeFilter = {
         label: "Store",
-        options: [
-            { value: "Islamic Bookstore", label: "Islamic Bookstore", checked: true },
-            { value: "Zakariyya Books", label: "Zakariyya Books", checked: true },
-        ],
+        options: stores.map((store) => ({ value: store, checked: true })),
     };
 
     // On component mount, update the filter options based on the URL parameters
@@ -40,7 +40,7 @@
 
     // Update the URL search parameters based on the current filter state
     const updateSearch = () => {
-        let query = new URLSearchParams(location.search);
+        let query = new URLSearchParams($page.url.searchParams.toString());
 
         // Get the values of unchecked options to be excluded
         let exclude = storeFilter.options
@@ -52,6 +52,8 @@
         exclude.forEach((value) => {
             query.append("exclude", value);
         });
+
+        query.set("page", "1");
 
         // Update the URL without losing focus
         goto(`?${query.toString()}`, {
@@ -81,21 +83,45 @@
             {storeFilter.label}
         </h3>
 
+        <Button 
+        on:click={() => {
+            storeFilter.options.forEach((option) => {
+                option.checked = true;
+            });
+            // force reactivity
+            storeFilter.options = [...storeFilter.options];
+            updateSearch();
+        }}
+        size="xs" class="mt-2">
+            Show All
+        </Button>
+        <Button 
+        on:click={() => {
+            storeFilter.options.forEach((option) => {
+                option.checked = false;
+            });
+            storeFilter.options = [...storeFilter.options];
+            updateSearch();
+        }}
+        size="xs" class="mt-2">
+            Hide All
+        </Button>
+
         {#each storeFilter.options as filter}
             <div class=" max-h-56 overflow-y-scroll">
                 <!-- Display filter options based on search input -->
-                {#if filter.label
+                {#if filter.value
                     .toLowerCase()
                     .includes(filterSearch.toLowerCase())}
                     <div class="flex items-center m-2">
                         <Checkbox
                             on:change={updateSearch}
                             bind:checked={filter.checked}
-                            label={filter.label}
+                            label={filter.value}
                             value={filter.value}
                             class="text-slate-300"
                         >
-                            {filter.label}
+                            {filter.value}
                         </Checkbox>
                     </div>
                 {/if}
