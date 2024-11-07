@@ -2,6 +2,7 @@ import pymongo
 from typing import Annotated
 from tinydb import TinyDB, Query
 from fastapi import FastAPI
+import pprint
 from fastapi import Query as fQuery
 from db.db import get_db
 import re
@@ -13,40 +14,80 @@ db = get_db()
 
 @app.get("/totalBooks")
 async def total_books():
-    return {
-        "total" : db.books.count_documents({})
-    }
+    return {"total": db.books.count_documents({})}
+
 
 @app.get("/search")
-async def search_books(
-    search: str,
+def search_books(
+    search: str = "",
+    author: str = "",
     page: int = 1,
     show: int = 15,
-    exclude: Annotated[list | None, fQuery()] = None,
+    exclude: Annotated[list | None, fQuery()] = [],
     sort: str = "low",
     instock: bool = False,
     searchDesc: bool = True,
 ):
+    if not search.strip() and not author.strip():
+        return {"results": [], "total": 0, "end": 0, "start": 0}
 
-    search = re.escape(search.strip())
-    if search == "":
-        return []
+    if search:
+        search = re.escape(search.strip())
 
-    queries = [
-        {
-            "$or": [
-                {"title": {"$regex": search, "$options": "i"}},
-                {"author": {"$regex": search, "$options": "i"}},
-            ]
-        }
-    ]
+    if author:
+        author = re.escape(author.strip())
 
-    print(searchDesc)
-    if searchDesc:
-        queries[0]["$or"].append({"description": {"$regex": search, "$options": "i"}})
+    if author and search:
+        queries = [
+            {
+                "$and": [
+                    {
+                        "$or": [
+                            {
+                                "author": {"$exists": False},
+                                "title": {
+                                    "$regex": f"(?=.*{search})(?=.*{author})",
+                                    "$options": "i",
+                                },
+                            },
+                            {
+                                "author": {"$exists": True},
+                                "title": {"$regex": search, "$options": "i"},
+                                "author": {"$regex": author, "$options": "i"},
+                            },
+                        ]
+                    }
+                ]
+            }
+        ]
+    elif search:
+        queries = [
+            {
+                "$or": [
+                    {
+                        "title": {"$regex": search, "$options": "i"},
+                    },
+                    {
+                        "author": {"$regex": search, "$options": "i"},
+                    },
+                ],
+            }
+        ]
+    elif author:
+        queries = [
+            {
+                "author": {"$regex": author, "$options": "i"},
+            }
+        ]
+
+    # if searchDesc:
+    #     queries[0]["$or"].append({"description": {"$regex": author, "$options": "i"}})
 
     if instock:
         queries.append({"instock": True})
+
+    if exclude:
+        queries.append({"source": {"$not": {"$in": exclude}}})   
 
     result = (
         db.books.find({"$and": queries}, {"_id": 0}).skip((page - 1) * show).limit(show)
@@ -60,8 +101,8 @@ async def search_books(
     elif sort == "high":
         result = result.sort("price", pymongo.DESCENDING)
 
-    if exclude:
-        result = [book for book in result if book["source"] not in exclude]
+    # if exclude:
+    #     result = [book for book in result if book["source"] not in exclude]
 
     start = (page - 1) * show
     end = page * show if page * show <= total else total
@@ -73,12 +114,10 @@ async def search_books(
         "start": start,
     }
 
-
-@app.get("/featured")
-def get_books():
-    pass
-
-
+@app.get("/status")
+def get_status():
+    return db.status.find_one({}, {"_id": 0})
+    
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

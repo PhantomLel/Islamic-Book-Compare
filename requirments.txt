@@ -1,4 +1,0 @@
-fastapi
-fastapi[standard]
-tinydb
-pymongo
