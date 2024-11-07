@@ -7,7 +7,6 @@
 
     export let hidden = true;
     export let stores: string[] = [];
-    console.log(stores)
 
     let filterSearch = "";
 

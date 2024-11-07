@@ -94,7 +94,7 @@
 <div class="pb-12">
     <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-1/2">
         <div class="gap-2 flex sm:flex-nowrap flex-wrap">
-            <div class="sm:w-3/4">
+            <div class="sm:w-1/2 w-full">
 
             <FloatingLabelInput
                 id={"search"}
@@ -111,8 +111,9 @@
             Title
             </FloatingLabelInput>
             </div>
-            <FloatingLabelInput
-                id={"author"}
+            <div class="sm:w-1/2 w-full">
+                <FloatingLabelInput
+                    id={"author"}
                 bind:value={author}
                 on:input={(e) => {
                     updateSearch(); // Call updateSearch on input change
@@ -123,7 +124,8 @@
                 style={"filled"}
             >
                 Author
-            </FloatingLabelInput>
+                </FloatingLabelInput>
+            </div>
         </div>
         <div class="flex justify-between gap-2">
             <Button

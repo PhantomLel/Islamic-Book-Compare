@@ -11,7 +11,6 @@ const get_stores = async () => {
         .then(data => {
             let stores = Object.keys(data)
             stores.splice(stores.indexOf("status"), 1)
-            console.log(stores)
             return stores
         })
 }
@@ -28,7 +27,6 @@ export const load: PageServerLoad = async ({ url }) => {
         stores = await get_stores();
     }
 
-    // Create a new AbortController for the current request
     controller = new AbortController();
     const signal = controller.signal;
 
@@ -36,12 +34,10 @@ export const load: PageServerLoad = async ({ url }) => {
         // Perform the fetch request with the abort signal
         const res = await fetch(`${apiUrl}search?${url.searchParams.toString()}`, { signal });
 
-        // Check if the response is OK
         if (!res.ok) {
             throw new Error('Error fetching data');
         }
 
-        // Parse the JSON response
         const data: {
             results: Book[],
             total: number,
