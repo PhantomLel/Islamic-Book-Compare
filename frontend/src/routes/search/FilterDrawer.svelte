@@ -1,12 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import { Drawer, Search, Hr, Checkbox, Button } from "flowbite-svelte";
+    import { Drawer, Search, Hr, Checkbox, Button, Label, Select } from "flowbite-svelte";
     import { onMount } from "svelte";
     import { sineIn } from "svelte/easing";
     import { page } from "$app/stores";
 
     export let hidden = true;
     export let stores: string[] = [];
+    export let show = 15;
 
     let filterSearch = "";
 
@@ -52,6 +53,7 @@
             query.append("exclude", value);
         });
 
+        query.set("show", show.toString());
         query.set("page", "1");
 
         // Update the URL without losing focus
@@ -69,14 +71,35 @@
     {transitionParams}
     bind:hidden
 >
-    <div class="flex">
+    <div class="sm:w-1/4 w-full">
         <Search
-            bind:value={filterSearch}
-            autocomplete={"off"}
-            size={"md"}
+        bind:value={filterSearch}
+        autocomplete={"off"}
+        size={"md"}
             placeholder={"Search Filters"}
         />
     </div>
+
+    {#if "show per page".includes(filterSearch.toLowerCase())}
+    <div>
+        <Label class="mt-3 ">
+            Show per page
+        <Select
+            bind:value={show}
+            on:change={() => updateSearch()}
+            class="mt-2 w-auto"
+            size={"md"}
+            items={[
+                { value: 15, name: "15" },
+                { value: 45, name: "45" },
+                { value: 75, name: "75" },
+                ]}
+            />
+        </Label>
+    </div>
+    {/if}
+
+ 
     <div class="mt-4">
         <h3 class=" text-xl text-white font-semibold">
             {storeFilter.label}
@@ -91,7 +114,7 @@
             storeFilter.options = [...storeFilter.options];
             updateSearch();
         }}
-        size="xs" class="mt-2">
+        size="xs" class="my-4">
             Show All
         </Button>
         <Button 
@@ -102,7 +125,7 @@
             storeFilter.options = [...storeFilter.options];
             updateSearch();
         }}
-        size="xs" class="mt-2">
+        size="xs" class="my-4">
             Hide All
         </Button>
 

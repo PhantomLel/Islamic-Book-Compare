@@ -1,4 +1,4 @@
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { apiUrl, type Book } from '$lib';
 
 let controller: AbortController | null = null; // Store the abort controller globally
@@ -75,3 +75,10 @@ export const load: PageServerLoad = async ({ url }) => {
 
 };
 
+export const actions: Actions = {
+    feedback: async ({ request }) => {
+        const formData = await request.formData();
+        console.log("feedback")
+        console.log(formData);
+    }
+} satisfies Actions;

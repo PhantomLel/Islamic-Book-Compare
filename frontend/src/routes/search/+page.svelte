@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { Button, Search, Select, Label, Checkbox, FloatingLabelInput, Spinner} from "flowbite-svelte";
+    import { Button, Select, Checkbox, FloatingLabelInput, Spinner, Modal, Label, Input } from "flowbite-svelte";
     import FilterOutline  from "flowbite-svelte-icons/FilterOutline.svelte";
+    import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -9,17 +10,17 @@
     import { onMount } from "svelte";
     import FilterDrawer from "./FilterDrawer.svelte";
 
-
     // The data prop is provided by the parent component
     export let data: PageData;
     
     let innerWidth: number;
 
+
     onMount(() => {
         innerWidth = window.innerWidth;
     });
 
-
+    let clickOutsideModal = true;
     // Initialize the search term from the provided data
     let search = $page.url.searchParams.get("search") || "";
     let author = $page.url.searchParams.get("author") || "";
@@ -30,6 +31,7 @@
 
     let timer: number; // Timer for debouncing search input
     let loading = false; // Flag to indicate loading state
+    let feedBackSent= 1; // 1 is unsubmitted, 2 is loading, 3 is submitted
     let filtersHidden = true; // Flag to control the visibility of the filter drawer
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
@@ -58,6 +60,33 @@
         loading = true;
     });
 
+    const handleFeedback = async (event: { currentTarget: EventTarget & HTMLFormElement }) => {
+        const formData = new FormData(event.currentTarget);
+        const feedback = formData.get("feedback");
+        const email = formData.get("email");
+
+        feedBackSent = 2;
+
+        fetch("https://formsubmit.co/ajax/aamohammed4556@gmail.com", {
+            method: "POST",
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                feedback: feedback,
+                email: email
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            feedBackSent = 3;
+        })
+        .catch(error => {
+            feedBackSent = 1;
+        });
+    }
+
     // Function to update the search query with a debounce effect
     const updateSearch = () => {
         console.log(search, author);
@@ -77,7 +106,6 @@
             query.set("author", author); 
 
             query.set("sort", sortByValue); 
-            query.set("show", show.toString()); 
             query.set("instock", instock.toString()); 
             query.set("searchDesc", searchDesc.toString());
             query.set("page", "1"); 
@@ -86,7 +114,7 @@
             goto(`?${query.toString()}`, {
                 keepFocus: true, 
             });
-        }, 200);
+        }, 400);
     };
 </script>
 
@@ -127,7 +155,10 @@
                 </FloatingLabelInput>
             </div>
         </div>
-        <div class="flex justify-between gap-2">
+        <div class="flex gap-3 mt-3 flex-wrap items-center">
+            <Button on:click={() => clickOutsideModal = true}  class="mt-1 self-end !p-2">
+                <InfoCircleOutline class="w-6 h-6" />
+            </Button>
             <Button
                 on:click={() => (filtersHidden = !filtersHidden)}
                 outline={!filtersHidden}
@@ -136,40 +167,26 @@
                 <FilterOutline class="w-3 h-3 mr-1" />
                 Filters
             </Button>
+            <div>
             <Select
                 on:change={() => updateSearch()}
-                class="mt-3"
+                class="mt-3 self-start"
                 size={"md"}
                 placeholder={"Sort by"}
                 bind:value={sortByValue}
                 items={[
                     { value: "low", name: "Lowest Price" },
                     { value: "high", name: "Highest Price" },
-                    { value: "popularity", name: "Popularity" },
                 ]}
             />
-        </div>
-        <div class="flex gap-6 mt-3 flex-wrap">
-            <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
+            </div>
+           <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
                 Hide Out of Stock
             </Checkbox>
             <Checkbox bind:checked={searchDesc} on:change={() => updateSearch()}>
                 Search Description
             </Checkbox>
-            <Label>
-                Show per page
-                <Select
-                    bind:value={show}
-                    on:change={() => updateSearch()}
-                    class="mt-2"
-                    size={"md"}
-                    items={[
-                        { value: 15, name: "15" },
-                        { value: 45, name: "45" },
-                        { value: 75, name: "75" },
-                    ]}
-                />
-            </Label>
+
         </div>
     </div>
 
@@ -217,4 +234,36 @@
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
-<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} />
+<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show={show} />
+
+
+<Modal title="How to use" bind:open={clickOutsideModal} outsideclose>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">You can search books in both English and Arabic. Some books are only searchable in Arabic.</p>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">If you try searching by author and get no results, try putting the author's name in the title field as some books are only searchable by title. Try using the search description option as well to broaden your search.</p>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Jazakallah Khair for using this site! Please let me know if you have any stores to add or feedback.</p>
+    <hr class="my-6" />
+    <h1 class="text-lg font-bold">Feedback</h1>
+
+    <form action="https://formsubmit.co/aamohammed4556@gmail.com" method="POST" class="flex flex-col space-y-6" on:submit|preventDefault={handleFeedback} >
+        {#if feedBackSent === 2}    
+            <Spinner color="purple" class="h-10 w-10" />
+        {:else if feedBackSent === 3}
+            <h1 class="text-lg font-bold">Thank you for your feedback!</h1>
+        {:else}
+        <Label class="space-y-2">
+            <span>Email (optional)</span>
+            <Input type="email" name="email" placeholder="name@company.com"/>
+        </Label>
+        <Label class="space-y-2">
+            <span>Feedback</span>
+            <Input type="text" name="feedback" required />
+            </Label>
+            <Button class="self-start" type="submit" size={"sm"}>Submit</Button>
+        {/if}
+    </form>
+
+
+    <svelte:fragment slot="footer">
+      <Button on:click={() => clickOutsideModal = false}>Close</Button>
+    </svelte:fragment>
+  </Modal>
