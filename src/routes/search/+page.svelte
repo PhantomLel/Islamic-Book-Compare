@@ -29,15 +29,16 @@
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
     let instock = $page.url.searchParams.get("instock") === "true"; // Default instock filter
 
-    let timer: number; // Timer for debouncing search input
-    let loading = false; // Flag to indicate loading state
-    let feedBackSent= 1; // 1 is unsubmitted, 2 is loading, 3 is submitted
-    let filtersHidden = true; // Flag to control the visibility of the filter drawer
+    let timer: ReturnType<typeof setTimeout>; 
+
+    let loading = false; 
+    let feedBackSent= 1; 
+    let filtersHidden = true; 
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
-    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" || $page.url.searchParams.get("searchDesc") === null; // Default to true
+    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" 
 
-    let pageNum: number; //= parseInt($page.url.hash.replace("#", "")) || 1;
+    let pageNum: number; 
 
     $: {
         pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
@@ -76,8 +77,9 @@
             method: "POST",
             headers: { 
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
             },
+            mode: 'cors',
             body: JSON.stringify({
                 feedback: feedback,
                 email: email
@@ -98,14 +100,13 @@
 
     // Function to update the search query with a debounce effect
     const updateSearch = () => {
-        console.log(search, author);
         clearTimeout(timer); // Clear any existing timer
 
         if (search === "" && author === "") {
             loading = false;
-            console.log("No search or author");
             return;
         }
+        loading = true;
 
         timer = setTimeout(() => {
 
@@ -123,7 +124,7 @@
             goto(`?${query.toString()}`, {
                 keepFocus: true, 
             });
-        }, 400);
+        }, 750);
     };
 </script>
 

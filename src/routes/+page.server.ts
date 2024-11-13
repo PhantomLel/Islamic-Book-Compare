@@ -1,16 +1,12 @@
 import type { PageServerLoad } from './$types';
-import { apiUrl } from '$lib';
 import { error, redirect, type Actions } from '@sveltejs/kit';
+import getDb from '$lib/server/db';
+
 
 export const load: PageServerLoad = async () => {
-
-  let data = await  fetch(apiUrl + "totalBooks");
-  let json = await data.json();
-  return {
-    props: {
-      total : json.total
-    }
-  }
+  const db = await getDb();
+  const total = await db.collection('books').countDocuments({});
+  return { props: { total } };
 };
 
 export const actions = {
