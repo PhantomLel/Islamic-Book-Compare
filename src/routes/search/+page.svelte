@@ -36,7 +36,7 @@
     let filtersHidden = true; 
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
-    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" || $page.url.searchParams.get("searchDesc") === null; 
+    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" 
 
     let pageNum: number; 
 
@@ -78,7 +78,6 @@
             headers: { 
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
-                'Access-Control-Allow-Origin': '*'
             },
             mode: 'cors',
             body: JSON.stringify({

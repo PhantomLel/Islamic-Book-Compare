@@ -1,9 +1,5 @@
 import type { Actions, PageServerLoad } from './$types';
-import {  type Book } from '$lib';
 import getDb from '$lib/server/db';
-import { getStores } from '$app/stores';
-
-let controller: AbortController | null = null; // Store the abort controller globally
 
 // export const ssr = false;
 
@@ -66,7 +62,7 @@ export const load: PageServerLoad = async ({ url }) => {
     const sort = url.searchParams.get('sort') || 'low';
     const instock = url.searchParams.get('instock') === 'true';
     const searchDesc = url.searchParams.get('searchDesc') !== 'false';
-    const exclude = url.searchParams.getAll('exclude');  // Extract exclude list
+    const exclude = url.searchParams.getAll('exclude');  
   
     const queries: any[] = [];
     if (search && author) {
@@ -92,12 +88,19 @@ export const load: PageServerLoad = async ({ url }) => {
     } else if (author) {
       queries.push({ author: { $regex: author, $options: 'i' } });
     }
+
+    if (searchDesc) {
+      // if description is not null search it 
+      queries.push({ 
+        description: { $regex: search, $options: 'i' }
+      });
+    }
   
     if (instock) {
-      queries.push({ instock: true });  // Only show in-stock items if requested
+      queries.push({ instock: true });  
     }
     if (exclude.length > 0) {
-      queries.push({ source: { $not: { $in: exclude } } });  // Exclude specified sources
+      queries.push({ source: { $not: { $in: exclude } } });  
     }
   
     // Get the total count of matching documents for pagination
@@ -110,9 +113,9 @@ export const load: PageServerLoad = async ({ url }) => {
       .limit(show);
   
     if (sort === 'low') {
-      results = results.sort({ price: 1 });  // Ascending sort for "low"
+      results = results.sort({ price: 1 });  
     } else if (sort === 'high') {
-      results = results.sort({ price: -1 });  // Descending sort for "high"
+      results = results.sort({ price: -1 });  
     }
   
     const resultsList = await results.toArray();
