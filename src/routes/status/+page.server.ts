@@ -1,4 +1,3 @@
-import { apiUrl } from '$lib';
 import getDb from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 
