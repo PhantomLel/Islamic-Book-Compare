@@ -20,7 +20,7 @@
         innerWidth = window.innerWidth;
     });
 
-    let clickOutsideModal = true;
+    let clickOutsideModal = false;
     // Initialize the search term from the provided data
     let search = $page.url.searchParams.get("search") || "";
     let author = $page.url.searchParams.get("author") || "";
@@ -65,6 +65,11 @@
         const feedback = formData.get("feedback");
         const email = formData.get("email");
 
+        // add warning on page leave
+        window.addEventListener("beforeunload", () => {
+            return "Are you sure you want to leave this page? Your feedback will not be submitted.";
+        });
+
         feedBackSent = 2;
 
         fetch("https://formsubmit.co/ajax/aamohammed4556@gmail.com", {
@@ -81,9 +86,13 @@
         .then(response => response.json())
         .then(data => {
             feedBackSent = 3;
+            window.removeEventListener("beforeunload", () => {
+            });
         })
         .catch(error => {
             feedBackSent = 1;
+            window.removeEventListener("beforeunload", () => {
+            });
         });
     }
 
@@ -246,7 +255,7 @@
 
     <form action="https://formsubmit.co/aamohammed4556@gmail.com" method="POST" class="flex flex-col space-y-6" on:submit|preventDefault={handleFeedback} >
         {#if feedBackSent === 2}    
-            <Spinner color="purple" class="h-10 w-10" />
+            <Spinner color="purple" class="h-16 w-16" />
         {:else if feedBackSent === 3}
             <h1 class="text-lg font-bold">Thank you for your feedback!</h1>
         {:else}
@@ -256,14 +265,13 @@
         </Label>
         <Label class="space-y-2">
             <span>Feedback</span>
-            <Input type="text" name="feedback" required />
+            <Input placeholder="Super important feedback" type="text" name="feedback" required />
             </Label>
-            <Button class="self-start" type="submit" size={"sm"}>Submit</Button>
+            <Button class="self-start sm:w-auto w-full" type="submit" size={"sm"}>Submit</Button>
         {/if}
     </form>
 
-
     <svelte:fragment slot="footer">
-      <Button on:click={() => clickOutsideModal = false}>Close</Button>
+      <Button outline={true} on:click={() => clickOutsideModal = false}>Close</Button>
     </svelte:fragment>
   </Modal>
