@@ -1,18 +1,22 @@
 import type { Actions, PageServerLoad } from './$types';
 import { apiUrl, type Book } from '$lib';
+import getDb from '$lib/server/db';
 
 let controller: AbortController | null = null; // Store the abort controller globally
 
 // export const ssr = false;
 
 const get_stores = async () => {
-    return await fetch(`${apiUrl}status`)
-        .then(res => res.json())
-        .then(data => {
-            let stores = Object.keys(data)
-            stores.splice(stores.indexOf("status"), 1)
-            return stores
-        })
+    const db = await getDb();
+    let data = await db.collection("status").findOne({}, { projection: { _id: 0 } });
+
+    if (!data) {
+        return []
+    }
+
+    const stores = Object.keys(data);
+    stores.splice(stores.indexOf("status"), 1)
+    return stores
 }
 
 let stores: string[] = [];

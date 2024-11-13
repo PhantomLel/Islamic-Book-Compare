@@ -1,14 +1,12 @@
 import { apiUrl } from '$lib';
+import getDb from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-    const res = await fetch(`${apiUrl}status`);
-    const data: Record<string, {
-        error: string;
-        last_crawled: string;
-        total_books: number;
-        time_to_crawl: number;
-    }> = await res.json();
+    const db = await getDb();
+    // exclude _id
+    const data = await db.collection('status').findOne({}, { projection: { _id: 0 } });
+
     return {
         props: data
     }
