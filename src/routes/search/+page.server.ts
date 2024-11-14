@@ -48,7 +48,8 @@ Explanation:
 */
 
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url}) => {
+
     const db = await getDb();
   
     // Fetch the list of stores
