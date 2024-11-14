@@ -238,7 +238,7 @@
                 {/if}
             {/each}
         </div>
-    {#if data.props.results.length > 1 || innerWidth < 768}
+    {#if (data.props.results.length > 1 || innerWidth < 768) && !loading}
         <Pagination
             {pageNum}
             helper={{
