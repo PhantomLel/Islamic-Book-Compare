@@ -3,8 +3,10 @@ import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
 
+
     const db = await getDb();
-    const ip = event.getClientAddress();
+    const ip = event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
+    console.log(ip);
 
     const ip_info = await db.collection('ips').findOne({ ip });
     if (!ip_info) {
