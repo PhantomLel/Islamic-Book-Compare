@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Book } from "$lib";
-    import TextPlaceholder from "flowbite-svelte/components/TextPlaceholder.svelte";
-    import ImagePlaceholder from "flowbite-svelte/components/ImagePlaceholder.svelte";
+    import TextPlaceholder from "flowbite-svelte/TextPlaceholder.svelte";
+    import ImagePlaceholder from "flowbite-svelte/ImagePlaceholder.svelte";
 
     export let book: Book;
     export let loading = false;

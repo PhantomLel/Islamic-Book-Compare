@@ -1,7 +1,6 @@
 <script lang="ts">
-    import Card from "flowbite-svelte/components/Card.svelte";
-    import Search from "flowbite-svelte/components/Search.svelte";
-    import Button from "flowbite-svelte/components/Button.svelte";
+    import Search from "flowbite-svelte/Search.svelte";
+    import Button from "flowbite-svelte/Button.svelte";
     import type { PageData } from "./$types";
     import { enhance } from "$app/forms";
 

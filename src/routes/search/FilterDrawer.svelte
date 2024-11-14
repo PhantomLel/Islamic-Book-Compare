@@ -1,13 +1,13 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     // import { Drawer, Search, Hr, Checkbox, Button, Label, Select } from "flowbite-svelte";
-    import Drawer from "flowbite-svelte/components/Drawer.svelte";
-    import Search from "flowbite-svelte/components/Search.svelte";
-    import Hr from "flowbite-svelte/components/Hr.svelte";
-    import Checkbox from "flowbite-svelte/components/Checkbox.svelte";
-    import Button from "flowbite-svelte/components/Button.svelte";
-    import Label from "flowbite-svelte/components/Label.svelte";
-    import Select from "flowbite-svelte/components/Select.svelte";
+    import Drawer from "flowbite-svelte/Drawer.svelte";
+    import Search from "flowbite-svelte/Search.svelte";
+    import Hr from "flowbite-svelte/Hr.svelte";
+    import Checkbox from "flowbite-svelte/Checkbox.svelte";
+    import Button from "flowbite-svelte/Button.svelte";
+    import Label from "flowbite-svelte/Label.svelte";
+    import Select from "flowbite-svelte/Select.svelte";
 
     import { onMount } from "svelte";
     import { sineIn } from "svelte/easing";
