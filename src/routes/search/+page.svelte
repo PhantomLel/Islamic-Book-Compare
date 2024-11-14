@@ -1,5 +1,12 @@
 <script lang="ts">
-    import { Button, Select, Checkbox, FloatingLabelInput, Spinner, Modal, Label, Input } from "flowbite-svelte";
+    import Button from "flowbite-svelte/components/Button.svelte";
+    import Select from "flowbite-svelte/components/Select.svelte";
+    import Checkbox from "flowbite-svelte/components/Checkbox.svelte";
+    import FloatingLabelInput from "flowbite-svelte/components/FloatingLabelInput.svelte";
+    import Spinner from "flowbite-svelte/components/Spinner.svelte";
+    import Modal from "flowbite-svelte/components/Modal.svelte";
+    import Label from "flowbite-svelte/components/Label.svelte";
+    import Input from "flowbite-svelte/components/Input.svelte";
     import FilterOutline  from "flowbite-svelte-icons/FilterOutline.svelte";
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import type { PageData } from "./$types";

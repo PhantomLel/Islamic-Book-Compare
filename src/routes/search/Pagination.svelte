@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Pagination } from 'flowbite-svelte';
+    import Pagination from "flowbite-svelte/components/Pagination.svelte";
     import { page } from '$app/stores';
     import ArrowLeftOutline from 'flowbite-svelte-icons/ArrowLeftOutline.svelte';
     import ArrowRightOutline from 'flowbite-svelte-icons/ArrowRightOutline.svelte';
