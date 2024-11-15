@@ -1,8 +1,13 @@
+import "dotenv/config";
 import getDb from '$lib/server/db';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
 
+    if (process.env.PRODUCTION === 'false') {
+        const response = await resolve(event);
+        return response;
+    }
 
     const db = await getDb();
     const ip = event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';

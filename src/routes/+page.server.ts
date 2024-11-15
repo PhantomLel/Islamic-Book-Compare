@@ -18,6 +18,6 @@ export const actions = {
       throw error(400, 'No search query provided');
     }
 
-    throw redirect(307, `/search?search=${encodeURIComponent(searchValue.toString())}&instock=true`);
+    throw redirect(307, `/search?search=${encodeURIComponent(searchValue.toString())}&instock=true&sort=rel`);
   }
 } satisfies Actions

@@ -109,7 +109,10 @@
     const updateSearch = () => {
         clearTimeout(timer); // Clear any existing timer
 
-        if (search === "" && author === "") {
+        const trimmedSearch = search.trim();
+        const trimmedAuthor = author.trim();
+
+        if (trimmedSearch === "" && trimmedAuthor === "") {
             loading = false;
             return;
         }
@@ -118,14 +121,21 @@
         timer = setTimeout(() => {
 
             let query = new URLSearchParams($page.url.searchParams.toString());
-            query.set("search", search); 
 
-            query.set("author", author); 
+            query.set("search", trimmedSearch); 
+
+            query.set("author", trimmedAuthor); 
 
             query.set("sort", sortByValue); 
             query.set("instock", instock.toString()); 
             query.set("searchDesc", searchDesc.toString());
             query.set("page", "1"); 
+
+            // if the query is the same as the current query, do not reload the page
+            if (query.toString() === $page.url.searchParams.toString()) {
+                loading = false;
+                return;
+            }
 
             // Reload the page with the updated query parameters
             goto(`?${query.toString()}`, {
@@ -161,9 +171,9 @@
                     id={"author"}
                 bind:value={author}
                 on:input={(e) => {
+                    // if space is pressed, do not update the search
                     updateSearch(); // Call updateSearch on input change
                 }}
-                cla
                 autocomplete={"off"}
                 name={"author"}
                 style={"filled"}
@@ -194,6 +204,7 @@
                 items={[
                     { value: "low", name: "Lowest Price" },
                     { value: "high", name: "Highest Price" },
+                    { value: "rel", name: "Relevance" },
                 ]}
             />
             </div>
@@ -232,10 +243,10 @@
     </div>
         <!-- Render a BookCard for each result -->
         <div class="flex flex-wrap justify-center">
-        {#each data.props.results as book}
-            {#if (instock && book.instock) || !instock}
-                    <BookCard {book} {loading} />
-                {/if}
+            {#each data.props.results as book}
+                {#if (instock && book.instock) || !instock}
+                        <BookCard {book} {loading} />
+                    {/if}
             {/each}
         </div>
     {#if (data.props.results.length > 1 || innerWidth < 768) && !loading}

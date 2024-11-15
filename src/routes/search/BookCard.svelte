@@ -26,7 +26,7 @@
         {/if}
 
         <div>
-            <h1 class="text-sm text-white font-semibold">
+            <h1 class="text-md text-white font-semibold">
                 {book.title.substring(0, 70) +
                     (book.title.length > 70 ? "..." : "")}
             </h1>
