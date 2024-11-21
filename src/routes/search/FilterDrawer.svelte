@@ -17,19 +17,19 @@
     export let stores: string[] = [];
     export let show = 15;
 
+
     let filterSearch = "";
 
     // Transition parameters for the Drawer component
     let transitionParams = {
-        y: 350, // Vertical movement for the transition
-        duration: 200, // Duration of the transition in milliseconds
-        easing: sineIn, // Easing function for smooth animation
+        y: 350, 
+        duration: 200,
+        easing: sineIn,
     };
 
-    // Extract the "exclude" search parameters from the current URL
     let storeExclude = new URLSearchParams($page.url.searchParams).getAll("exclude");
+    let fuzzy : boolean = $page.url.searchParams.get("fuzzy") === "true";
 
-    // Define the store filter options and their default states
     let storeFilter = {
         label: "Store",
         options: stores.map((store) => ({ value: store, checked: true })),
@@ -55,15 +55,21 @@
             .filter((option) => !option.checked)
             .map((option) => option.value);
         
-        query.delete("exclude"); // Remove the "exclude" parameter if no options are unchecked
+        query.delete("exclude"); 
 
         exclude.forEach((value) => {
             query.append("exclude", value);
         });
 
+
+        if (fuzzy) {
+            query.set("fuzzy", "true");
+        } else {
+            query.delete("fuzzy");
+        }
+
         query.set("show", show.toString());
         query.set("page", "1");
-
         // Update the URL without losing focus
         goto(`?${query.toString()}`, {
             keepFocus: true,
@@ -104,6 +110,18 @@
                 ]}
             />
         </Label>
+    </div>
+    {/if}
+
+    {#if "fuzzy search".includes(filterSearch.toLowerCase())}
+    <div>
+        <Checkbox
+            class="mt-4 text-md"
+            bind:checked={fuzzy}
+            on:change={() => updateSearch()}
+        >
+            Use fuzzy search
+        </Checkbox>
     </div>
     {/if}
 

@@ -262,12 +262,13 @@
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
-<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show={show} />
+<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show={show}/>
 
 
 <Modal title="How to use" bind:open={clickOutsideModal} outsideclose>
     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">You can search books in both English and Arabic. Some books are only searchable in Arabic.</p>
     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">If you try searching by author and get no results, try putting the author's name in the title field as some books are only searchable by title. Try using the search description option as well to broaden your search.</p>
+    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Try using the fuzzy search option to search for similar words, and also try unchecking the hide out of stock option.</p>
     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Jazakallah Khair for using this site! Please let me know if you have any stores to add or feedback.</p>
     <hr class="my-6" />
     <h1 class="text-lg font-bold">Feedback</h1>

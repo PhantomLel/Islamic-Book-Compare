@@ -35,7 +35,8 @@ export const load: PageServerLoad = async ({ url}) => {
     const instock = url.searchParams.get('instock') === 'true';
     const searchDesc = url.searchParams.get('searchDesc') !== 'false';
     const exclude = url.searchParams.getAll('exclude');  
-  
+    const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
+
     const queries: any[] = [];
 
     // if (search && author) {
@@ -79,15 +80,18 @@ export const load: PageServerLoad = async ({ url}) => {
                   {
                     "text": {
                       "query": author,
-                      "path": "author",
-                      "fuzzy": {}
+                      "path": "author", 
+                      "matchCriteria": "all",
+                      "fuzzy": fuzzySearch ? {} : undefined
+
                     }
                   },
                   {
                     "text": {
                       "query": search,
                       "path": "title",
-                      "fuzzy": {}
+                      "matchCriteria": "all",
+                      "fuzzy": fuzzySearch ? {} : undefined
                     }
                   }
                 ]
@@ -100,14 +104,27 @@ export const load: PageServerLoad = async ({ url}) => {
         {
           $search: {
             index: "default",
-            text: { query: search, path: { wildcard: "*" }, fuzzy: {} }
+            text: { 
+              query: search, 
+              path: { wildcard: "*" },
+              matchCriteria: "all",
+              fuzzy: fuzzySearch ? {} : undefined
+            }
           }
         }
       );
     } else if (author) {
       queries.push(
         {
-          $search: { index: "default", text: { query: author, path: { wildcard: "*" }, fuzzy: {} } }
+          $search: { 
+            index: "default", 
+            text: { 
+              query: author, 
+              path: { wildcard: "*" }, 
+              matchCriteria: "all",
+              fuzzy: fuzzySearch ? {} : undefined
+            } 
+          }
         }
       );
     }
@@ -132,12 +149,11 @@ export const load: PageServerLoad = async ({ url}) => {
         documents: [
           { $skip: (page - 1) * show },
           { $limit: show },
-          { $project: { _id: 0 } },
+          { $project: { _id: 0 } }, // remove the _id field
           { $sort: sort === "rel" ? {score : -1} : { price: sort === 'low' ? 1 : -1 } },
        ] 
       }
     })
-
 
     let results = await db.collection('books').aggregate(queries).toArray();
 
