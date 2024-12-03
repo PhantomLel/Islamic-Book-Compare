@@ -10,16 +10,19 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     const db = await getDb();
+    const date = new Date().toLocaleDateString("en-US", { year: '2-digit', month: '2-digit', day: '2-digit' });
     const ip = event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
-    console.log(ip);
 
-    const ip_info = await db.collection('ips').findOne({ ip });
+    const ip_info = await db.collection('ips').findOne({ date });
     if (!ip_info) {
-        await db.collection('ips').insertOne({ ip, count: 1 });
+        await db.collection('ips').insertOne({ date, count: 1, ips: [ip] });
     } else {
-        await db.collection('ips').updateOne({ ip }, { $inc: { count: 1 } });
+        await db.collection('ips').updateOne(
+            { date }, 
+            { $inc: { count: 1 }, $push: { ips: ip } } as any
+        );
     }
 
-	const response = await resolve(event);
-	return response;
+    const response = await resolve(event);
+    return response;
 }
