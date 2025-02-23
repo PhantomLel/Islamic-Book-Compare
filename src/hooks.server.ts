@@ -3,6 +3,7 @@ import getDb from '$lib/server/db';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
+    return await resolve(event);
 
     if (process.env.PRODUCTION === 'false') {
         const response = await resolve(event);
@@ -10,6 +11,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
 
     const db = await getDb();
+
     const date = new Date().toLocaleDateString("en-US", { year: '2-digit', month: '2-digit', day: '2-digit' });
     const ip = event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
     const userAgent = event.request.headers.get('user-agent') || 'Unknown User Agent';
