@@ -154,6 +154,7 @@ export const load: PageServerLoad = async ({ url}) => {
        ] 
       }
     })
+    console.log(queries);
 
     let results = await db.collection('books').aggregate(queries).toArray();
 
