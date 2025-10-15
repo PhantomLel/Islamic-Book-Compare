@@ -78,19 +78,19 @@ export const load: PageServerLoad = async ({ url}) => {
               "compound": {
                 "must": [
                   {
-                    "text": {
+                    "autocomplete": {
                       "query": author,
                       "path": "author", 
-                      "matchCriteria": "all",
+                      // "matchCriteria": "all",
                       "fuzzy": fuzzySearch ? {} : undefined
 
                     }
                   },
                   {
-                    "text": {
+                    "autocomplete": {
                       "query": search,
                       "path": "title",
-                      "matchCriteria": "all",
+                      // "matchCriteria": "all",
                       "fuzzy": fuzzySearch ? {} : undefined
                     }
                   }
@@ -104,10 +104,10 @@ export const load: PageServerLoad = async ({ url}) => {
         {
           $search: {
             index: "default",
-            text: { 
-              query: search, 
-              path: { wildcard: "*" },
-              matchCriteria: "all",
+            autocomplete: { 
+              query: search,
+              path: "title",
+              // matchCriteria: "all",
               fuzzy: fuzzySearch ? {} : undefined
             }
           }
@@ -118,10 +118,10 @@ export const load: PageServerLoad = async ({ url}) => {
         {
           $search: { 
             index: "default", 
-            text: { 
+            autocomplete: { 
               query: author, 
-              path: { wildcard: "*" }, 
-              matchCriteria: "all",
+              path: "author", 
+              // matchCriteria: "all",
               fuzzy: fuzzySearch ? {} : undefined
             } 
           }
@@ -154,9 +154,12 @@ export const load: PageServerLoad = async ({ url}) => {
        ] 
       }
     })
-    console.log(queries);
-
     let results = await db.collection('books').aggregate(queries).toArray();
+    // print scores in order 
+
+    results.forEach(result => {
+      console.log(result);
+    });
 
     // get the total count and the documents
     const total = results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0;
