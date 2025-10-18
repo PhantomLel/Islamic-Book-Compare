@@ -5,8 +5,10 @@
     const { status, ...props } = data.props;
 
     function timeSince(ts: string): string {
-        const diff = Date.now() - new Date(ts + 'Z').getTime();
-        return `${Math.floor(diff / 3.6e6)}:${Math.floor((diff % 3.6e6) / 6e4).toString().padStart(2, '0')}`;
+        const diff = Date.now() - new Date(ts).getTime();
+        const hours = Math.floor(diff / 3.6e6);
+        const minutes = Math.floor((diff % 3.6e6) / 6e4);
+        return `${hours}:${minutes.toString().padStart(2, '0')}`;
     }
 
 
