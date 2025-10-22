@@ -207,6 +207,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
     };
   };
   
+  // not in use currently
   export const actions: Actions = {
     feedback: async ({ request }) => {
         const db = await getDb();
@@ -215,41 +216,6 @@ export const load: PageServerLoad = async ({ url, request }) => {
         const feedback = formData.get("feedback") as string;
 
         await db.collection("feedback").insertOne({ email, feedback });
-    },
-    bookClicked: async ({ request }) => {
-        if (request.headers.get('host') !== 'kitaabfinder.com') {
-            return;
-        }
-
-        const formData = await request.formData();
-        const bookTitle = formData.get("bookTitle") as string;
-        const bookAuthor = formData.get("bookAuthor") as string;
-        const bookUrl = formData.get("bookUrl") as string;
-        const bookPrice = formData.get("bookPrice") as string;
-        const bookSource = formData.get("bookSource") as string;
-
-        const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
-        const userAgent = request.headers.get('user-agent') || 'Unknown User Agent';
-
-        const message = `📖 *Book Clicked Alert*
-
-📍 *Client Info:*
-• IP: \`${ip}\`
-• User Agent: \`${userAgent}\`
-
-📚 *Book Details:*
-• Title: *${bookTitle || 'Unknown'}*
-• Author: *${bookAuthor || 'Unknown'}*
-• Price: \`${bookPrice || 'N/A'}\`
-• Source: \`${bookSource || 'Unknown'}\`
-• URL: \`${bookUrl || 'Unknown'}\`
-
-⏰ ${new Date().toLocaleString()}`;
-
-        sendMessage(message).catch(error => {
-            console.error('Failed to send book clicked alert:', error);
-        });
-
-        return { success: true };
     }
+
   }

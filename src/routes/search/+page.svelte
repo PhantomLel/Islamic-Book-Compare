@@ -15,8 +15,8 @@
     import Pagination from "./Pagination.svelte";
     import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
     import { onMount } from "svelte";
-    import { enhance } from "$app/forms";
     import FilterDrawer from "./FilterDrawer.svelte";
+    import type { Book } from "$lib";
 
     // The data prop is provided by the parent component
     export let data: PageData;
@@ -69,33 +69,27 @@
         loading = true;
     });
 
-    const handleBookClick = (book: any) => {
-        // Create a hidden form and submit it to trigger the action
-        console.log(book);
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '?/bookClicked';
-        
-        // Add book data as hidden inputs
-        const fields = {
-            bookTitle: book.title,
-            bookAuthor: book.author,
-            bookUrl: book.url,
-            bookPrice: book.price,
-            bookSource: book.source
-        };
-        
-        Object.entries(fields).forEach(([key, value]) => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value || '';
-            form.appendChild(input);
+    const handleBookClick = (book: Book) => {
+        fetch("/api/book-clicked", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                bookTitle: book.title,
+                bookAuthor: book.author,
+                bookUrl: book.url,
+                bookPrice: book.price,
+                bookSource: book.source
+            }),
+        }).then(response => response.json())
+        .then(data => {
+            console.log('Book click tracked:', data);
+        })
+        .catch(error => {
+            console.error('Failed to track book click:', error);
         });
-        
-        document.body.appendChild(form);
-        form.submit();
-        document.body.removeChild(form);
     }
 
     const handleFeedback = async (event: { currentTarget: EventTarget & HTMLFormElement }) => {
@@ -275,7 +269,7 @@
         <div class="flex flex-wrap justify-center">
             {#each data.props.results as book}
                 {#if (instock && book.instock) || !instock}
-                        <BookCard {book} {loading} handleBookClick={() => handleBookClick(book)} />
+                        <BookCard {book} {loading} handleBookClick={handleBookClick} />
                     {/if}
             {/each}
         </div>

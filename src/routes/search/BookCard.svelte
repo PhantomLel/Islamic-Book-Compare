@@ -5,7 +5,7 @@
 
     export let book: Book;
     export let loading = false;
-    export let handleBookClick: (url: string) => void;
+    export let handleBookClick: (book: Book) => void;
 </script>
 
 {#if !loading}
@@ -13,7 +13,7 @@
     href={book.url}
     target="_blank"
     class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full cursor-pointer"
-    on:click={() => handleBookClick(book.url)}>
+    on:click={() => handleBookClick(book)}>
         {#if book.image != null}
             <img
                 src={book.image}
