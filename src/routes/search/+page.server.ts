@@ -1,6 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import getDb from '$lib/server/db';
-
+import sendMessage from '$lib/server/telegram';
 // export const ssr = false;
 
 const get_stores = async () => {
@@ -18,8 +18,42 @@ const get_stores = async () => {
 
 let stores: string[] = [];
 
+const sendUsageAlert = async (request: Request, search: string, author: string, page: number, show: number, sort: string, instock: boolean, exclude: string[], fuzzySearch: boolean, total: number) => {
+  if (request.headers.get('host') !== 'kitaabfinder.com') {
+    return;
+  }
 
-export const load: PageServerLoad = async ({ url}) => {
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
+  const userAgent = request.headers.get('user-agent') || 'Unknown User Agent';
+
+  const message = `*Book Search Alert*
+
+📍 *Client Info:*
+• IP: \`${ip}\`
+• User Agent: \`${userAgent}\`
+
+🔎 *Search Parameters:*
+• Search: *${search || 'None'}*
+• Author: *${author || 'None'}*
+• Page: \`${page}\`
+• Show: \`${show}\` results
+• Sort: \`${sort}\`
+• In Stock Only: ${instock ? '✅ Yes' : '❌ No'}
+• Exclude Stores: ${exclude.length > 0 ? exclude.join(', ') : 'None'}
+• Fuzzy Search: ${fuzzySearch ? '✅ Enabled' : '❌ Disabled'}
+
+*Results:*
+• Total Found: *${total}* books
+
+⏰ ${new Date().toLocaleString()}`;
+
+  sendMessage(message).catch(error => {
+    console.error('Failed to send usage alert:', error);
+  });
+}
+
+
+export const load: PageServerLoad = async ({ url, request }) => {
 
     const db = await getDb();
   
@@ -155,15 +189,12 @@ export const load: PageServerLoad = async ({ url}) => {
       }
     })
     let results = await db.collection('books').aggregate(queries).toArray();
-    // print scores in order 
-
-    results.forEach(result => {
-      console.log(result);
-    });
 
     // get the total count and the documents
     const total = results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0;
     const books = results.length > 0 ? results[0].documents : [];
+
+    await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total);
   
     return {
       props: {

@@ -141,7 +141,7 @@
             goto(`?${query.toString()}`, {
                 keepFocus: true, 
             });
-        }, 750);
+        }, 700);
     };
 </script>
 
