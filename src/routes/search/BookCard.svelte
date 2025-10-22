@@ -5,14 +5,15 @@
 
     export let book: Book;
     export let loading = false;
-
+    export let handleBookClick: (url: string) => void;
 </script>
 
 {#if !loading}
     <a
     href={book.url}
     target="_blank"
-    class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full cursor-pointer">
+    class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 sm:w-1/4 w-full cursor-pointer"
+    on:click={() => handleBookClick(book.url)}>
         {#if book.image != null}
             <img
                 src={book.image}
@@ -21,8 +22,8 @@
             />
         {:else}
             <ImagePlaceholder 
-            
-            imgOnly={true} class="w-32" />
+
+            imgOnly={true} divClass="w-32" />
         {/if}
 
         <div>
@@ -57,9 +58,9 @@
     </a>
 {:else}
     <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3">
-        <ImagePlaceholder imgOnly class="w-32" />
+        <ImagePlaceholder imgOnly divClass="w-32" />
         <div>
-            <TextPlaceholder class="w-32 mt-6" />
+            <TextPlaceholder size="w-32 mt-6" />
         </div>
     </div>
 {/if}

@@ -15,6 +15,7 @@
     import Pagination from "./Pagination.svelte";
     import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import { enhance } from "$app/forms";
     import FilterDrawer from "./FilterDrawer.svelte";
 
     // The data prop is provided by the parent component
@@ -67,6 +68,35 @@
     beforeNavigate(() => {
         loading = true;
     });
+
+    const handleBookClick = (book: any) => {
+        // Create a hidden form and submit it to trigger the action
+        console.log(book);
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '?/bookClicked';
+        
+        // Add book data as hidden inputs
+        const fields = {
+            bookTitle: book.title,
+            bookAuthor: book.author,
+            bookUrl: book.url,
+            bookPrice: book.price,
+            bookSource: book.source
+        };
+        
+        Object.entries(fields).forEach(([key, value]) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value || '';
+            form.appendChild(input);
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
 
     const handleFeedback = async (event: { currentTarget: EventTarget & HTMLFormElement }) => {
         const formData = new FormData(event.currentTarget);
@@ -158,7 +188,7 @@
                     updateSearch(); // Call updateSearch on input change
                 }}
                 bind:value={search}
-                classInput={"w-full"}
+                class="w-full"
                 autocomplete={"off"}
                 name={"search"}
                 style={"filled"}
@@ -245,7 +275,7 @@
         <div class="flex flex-wrap justify-center">
             {#each data.props.results as book}
                 {#if (instock && book.instock) || !instock}
-                        <BookCard {book} {loading} />
+                        <BookCard {book} {loading} handleBookClick={() => handleBookClick(book)} />
                     {/if}
             {/each}
         </div>
