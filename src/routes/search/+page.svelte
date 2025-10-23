@@ -1,4 +1,5 @@
 <script lang="ts">
+    import CoffeeIcon from "./CoffeeIcon.svelte";
     import Button from "flowbite-svelte/Button.svelte";
     import Select from "flowbite-svelte/Select.svelte";
     import Checkbox from "flowbite-svelte/Checkbox.svelte";
@@ -7,8 +8,11 @@
     import Modal from "flowbite-svelte/Modal.svelte";
     import Label from "flowbite-svelte/Label.svelte";
     import Input from "flowbite-svelte/Input.svelte";
-    import FilterOutline  from "flowbite-svelte-icons/FilterOutline.svelte";
+    import FilterOutline from "flowbite-svelte-icons/FilterOutline.svelte";
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
+    import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
+    import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
+    import Alert from "flowbite-svelte/Alert.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -17,12 +21,12 @@
     import { onMount } from "svelte";
     import FilterDrawer from "./FilterDrawer.svelte";
     import type { Book } from "$lib";
-
+    import GithubSolid from "flowbite-svelte-icons/GithubSolid.svelte";
+    import CodeOutline from "flowbite-svelte-icons/CodeOutline.svelte";
     // The data prop is provided by the parent component
     export let data: PageData;
-    
-    let innerWidth: number;
 
+    let innerWidth: number;
 
     onMount(() => {
         innerWidth = window.innerWidth;
@@ -37,29 +41,25 @@
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
     let instock = $page.url.searchParams.get("instock") === "true"; // Default instock filter
 
-    let timer: ReturnType<typeof setTimeout>; 
+    let timer: ReturnType<typeof setTimeout>;
 
-    let loading = false; 
-    let feedBackSent= 1; 
-    let filtersHidden = true; 
+    let loading = false;
+    let feedBackSent = 1;
+    let filtersHidden = true;
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
-    let searchDesc = $page.url.searchParams.get("searchDesc") === "true" 
+    let searchDesc = $page.url.searchParams.get("searchDesc") === "true";
 
-    let pageNum: number; 
+    let pageNum: number;
 
     $: {
         pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
 
-        if (
-            pageNum < 1 ||
-            pageNum > Math.ceil(data.props.total / show)
-        ) {
+        if (pageNum < 1 || pageNum > Math.ceil(data.props.total / show)) {
             pageNum = Math.ceil(data.props.total / show);
             $page.url.searchParams.set("page", pageNum.toString());
         }
     }
-
 
     afterNavigate(() => {
         loading = false;
@@ -73,26 +73,29 @@
         fetch("/api/book-clicked", {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                Accept: "application/json",
             },
             body: JSON.stringify({
                 bookTitle: book.title,
                 bookAuthor: book.author,
                 bookUrl: book.url,
                 bookPrice: book.price,
-                bookSource: book.source
+                bookSource: book.source,
             }),
-        }).then(response => response.json())
-        .then(data => {
-            console.log('Book click tracked:', data);
         })
-        .catch(error => {
-            console.error('Failed to track book click:', error);
-        });
-    }
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("Book click tracked:", data);
+            })
+            .catch((error) => {
+                console.error("Failed to track book click:", error);
+            });
+    };
 
-    const handleFeedback = async (event: { currentTarget: EventTarget & HTMLFormElement }) => {
+    const handleFeedback = async (event: {
+        currentTarget: EventTarget & HTMLFormElement;
+    }) => {
         const formData = new FormData(event.currentTarget);
         const feedback = formData.get("feedback");
         const email = formData.get("email");
@@ -106,28 +109,26 @@
 
         fetch("https://formsubmit.co/ajax/aamohammed4556@gmail.com", {
             method: "POST",
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
             },
-            mode: 'cors',
+            mode: "cors",
             body: JSON.stringify({
                 feedback: feedback,
-                email: email
+                email: email,
+            }),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                feedBackSent = 3;
+                window.removeEventListener("beforeunload", () => {});
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            feedBackSent = 3;
-            window.removeEventListener("beforeunload", () => {
+            .catch((error) => {
+                feedBackSent = 1;
+                window.removeEventListener("beforeunload", () => {});
             });
-        })
-        .catch(error => {
-            feedBackSent = 1;
-            window.removeEventListener("beforeunload", () => {
-            });
-        });
-    }
+    };
 
     // Function to update the search query with a debounce effect
     const updateSearch = () => {
@@ -143,17 +144,16 @@
         loading = true;
 
         timer = setTimeout(() => {
-
             let query = new URLSearchParams($page.url.searchParams.toString());
 
-            query.set("search", trimmedSearch); 
+            query.set("search", trimmedSearch);
 
-            query.set("author", trimmedAuthor); 
+            query.set("author", trimmedAuthor);
 
-            query.set("sort", sortByValue); 
-            query.set("instock", instock.toString()); 
+            query.set("sort", sortByValue);
+            query.set("instock", instock.toString());
             query.set("searchDesc", searchDesc.toString());
-            query.set("page", "1"); 
+            query.set("page", "1");
 
             // if the query is the same as the current query, do not reload the page
             if (query.toString() === $page.url.searchParams.toString()) {
@@ -163,51 +163,55 @@
 
             // Reload the page with the updated query parameters
             goto(`?${query.toString()}`, {
-                keepFocus: true, 
+                keepFocus: true,
             });
         }, 700);
     };
 </script>
 
-<title> {search ? search : author ? author : "Search"} | Islamic Book Search </title>
+<title>
+    {search ? search : author ? author : "Search"} | Islamic Book Search
+</title>
 <div class="pb-12">
     <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-1/2">
         <div class="gap-2 flex sm:flex-nowrap flex-wrap">
             <div class="sm:w-1/2 w-full">
-
-            <FloatingLabelInput
-                id={"search"}
-                required
-                on:input={(e) => {
-                    updateSearch(); // Call updateSearch on input change
-                }}
-                bind:value={search}
-                class="w-full"
-                autocomplete={"off"}
-                name={"search"}
-                style={"filled"}
-            >
-            Title
-            </FloatingLabelInput>
+                <FloatingLabelInput
+                    id={"search"}
+                    required
+                    on:input={(e) => {
+                        updateSearch(); // Call updateSearch on input change
+                    }}
+                    bind:value={search}
+                    class="w-full"
+                    autocomplete={"off"}
+                    name={"search"}
+                    style={"filled"}
+                >
+                    Title
+                </FloatingLabelInput>
             </div>
             <div class="sm:w-1/2 w-full">
                 <FloatingLabelInput
                     id={"author"}
-                bind:value={author}
-                on:input={(e) => {
-                    // if space is pressed, do not update the search
-                    updateSearch(); // Call updateSearch on input change
-                }}
-                autocomplete={"off"}
-                name={"author"}
-                style={"filled"}
-            >
-                Author
+                    bind:value={author}
+                    on:input={(e) => {
+                        // if space is pressed, do not update the search
+                        updateSearch(); // Call updateSearch on input change
+                    }}
+                    autocomplete={"off"}
+                    name={"author"}
+                    style={"filled"}
+                >
+                    Author
                 </FloatingLabelInput>
             </div>
         </div>
         <div class="flex gap-3 mt-3 flex-wrap items-center">
-            <Button on:click={() => clickOutsideModal = true}  class="mt-1 self-end !p-2">
+            <Button
+                on:click={() => (clickOutsideModal = true)}
+                class="mt-1 self-end !p-2"
+            >
                 <InfoCircleOutline class="w-6 h-6" />
             </Button>
             <Button
@@ -219,41 +223,94 @@
                 Filters
             </Button>
             <div>
-            <Select
-                on:change={() => updateSearch()}
-                class="mt-3 self-start"
-                size={"md"}
-                placeholder={"Sort by"}
-                bind:value={sortByValue}
-                items={[
-                    { value: "low", name: "Lowest Price" },
-                    { value: "high", name: "Highest Price" },
-                    { value: "rel", name: "Relevance" },
-                ]}
-            />
+                <Select
+                    on:change={() => updateSearch()}
+                    class="mt-3 self-start"
+                    size={"md"}
+                    placeholder={"Sort by"}
+                    bind:value={sortByValue}
+                    items={[
+                        { value: "low", name: "Lowest Price" },
+                        { value: "high", name: "Highest Price" },
+                        { value: "rel", name: "Relevance" },
+                    ]}
+                />
             </div>
-           <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
-                Hide Out of Stock
-            </Checkbox>
-            <Checkbox bind:checked={searchDesc} on:change={() => updateSearch()}>
-                Search Description
-            </Checkbox>
-
+            <div class="flex flex-col gap-3">
+                <Checkbox
+                    bind:checked={instock}
+                    on:change={() => updateSearch()}
+                >
+                    Hide Out of Stock
+                </Checkbox>
+                <Checkbox
+                    bind:checked={searchDesc}
+                    on:change={() => updateSearch()}
+                >
+                    Search Description
+                </Checkbox>
+            </div>
         </div>
     </div>
 
     <div class="flex justify-center">
-
         {#if data.props.results.length === 0}
-        <div class="flex flex-col items-center">
-            {#if loading}
-                <Spinner color="purple" class="h-24 w-24 mt-24"/>
-            {:else}
-                <h1 class="text-2xl ml-5 mb-3 text-white mt-12 font-bold">
-                    No results found
-                </h1>
-            {/if}
-        </div>
+            <div
+                class="flex flex-col items-center justify-center min-h-[400px] px-4"
+            >
+                {#if loading}
+                    <div class="flex flex-col items-center">
+                        <Spinner color="purple" class="h-24 w-24 mb-4" />
+                        <p class="text-lg text-gray-300">
+                            Searching for books...
+                        </p>
+                    </div>
+                {:else}
+                    <div class="max-w-lg w-full">
+                        <!-- Main Alert Card -->
+                        <div
+                            class="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl p-8 border dark:border-slate-800 shadow-lg"
+                        >
+                            <div class="text-center">
+                                <!-- Icon -->
+                                <div
+                                    class="mx-auto w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-6"
+                                >
+                                    <SearchOutline
+                                        class="w-8 h-8 text-indigo-600 dark:text-indigo-400"
+                                    />
+                                </div>
+
+                                <!-- Title -->
+                                <h3
+                                    class="text-2xl font-bold text-gray-900 dark:text-white mb-3"
+                                >
+                                    No Books Found
+                                </h3>
+
+                                <!-- Description -->
+                                <p
+                                    class="text-gray-600 dark:text-gray-300 text-lg mb-8 leading-relaxed"
+                                >
+                                    We couldn't find any books matching your
+                                    search criteria. Try adjusting your search
+                                    terms or filters.
+                                </p>
+
+                                <!-- Help Button -->
+                                <Button
+                                    on:click={() => (clickOutsideModal = true)}
+                                    size="lg"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                                >
+                                    <InfoCircleOutline class="w-5 h-5 mr-2" />
+                                    Get Help & Tips
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+            </div>
         {:else}
             <Pagination
                 {pageNum}
@@ -265,57 +322,171 @@
             />
         {/if}
     </div>
-        <!-- Render a BookCard for each result -->
-        <div class="flex flex-wrap justify-center">
-            {#each data.props.results as book}
-                {#if (instock && book.instock) || !instock}
-                        <BookCard {book} {loading} handleBookClick={handleBookClick} />
-                    {/if}
-            {/each}
-        </div>
+    <!-- Render a BookCard for each result -->
+    <div class="flex flex-wrap justify-center">
+        {#each data.props.results as book}
+            {#if (instock && book.instock) || !instock}
+                <BookCard {book} {loading} {handleBookClick} />
+            {/if}
+        {/each}
+    </div>
     {#if (data.props.results.length > 1 || innerWidth < 768) && !loading}
         <Pagination
             {pageNum}
             helper={{
-            start: data.props.start,
-            end: data.props.end,
-            total: data.props.total,
-        }}
-    />
+                start: data.props.start,
+                end: data.props.end,
+                total: data.props.total,
+            }}
+        />
     {/if}
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
-<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show={show}/>
+<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show />
 
+<Modal title="More Info" bind:open={clickOutsideModal} outsideclose>
+    <div class="space-y-6">
+        <!-- Search Tips Section -->
+        <div
+            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+        >
+            <div class="flex items-center mb-3">
+                <BookOpenOutline
+                    class="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
+                />
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Search Tips
+                </h3>
+            </div>
+            <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Try searching in both English and Arabic
+                </li>
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Use the author's name in the title field if needed
+                </li>
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Enable "Search Description" to broaden results
+                </li>
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Uncheck "Hide Out of Stock" to see all books
+                </li>
+            </ul>
+        </div>
+        <!-- project info section -->
+        <div
+            class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+        >
+            <div class="flex items-center mb-3">
+                <CodeOutline
+                    class="w-6 h-6 mr-2 text-purple-600 dark:text-purple-400"
+                />
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Project Info
+                </h3>
+            </div>
+            <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Contributors are always welcome!
+                </li>
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Contact me at aamohammed4556@gmail.com if you would like to contribute.
+                </li>
+            </ul>
+            <a
+                href="https://github.com/PhantomLel/Islamic-Book-Compare"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <Button
+                    class="mt-4 mr-2 hover:text-white transition-colors duration-200"
+                >
+                    <GithubSolid class="w-5 h-5 mr-2" />
+                    GitHub
+                </Button>
+            </a>
+            <a
+                href="https://www.buymeacoffee.com/aamohammedc"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <Button
+                    class=" hover:text-white transition-colors duration-200"
+                >
+                    <CoffeeIcon className="w-5 h-5 mr-2 text-white" />
+                    Support the Site!
+                </Button>
+ 
+        </div>
+    </div>
 
-<Modal title="How to use" bind:open={clickOutsideModal} outsideclose>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">You can search books in both English and Arabic. Some books are only searchable in Arabic.</p>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">If you try searching by author and get no results, try putting the author's name in the title field as some books are only searchable by title. Try using the search description option as well to broaden your search.</p>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Try using the fuzzy search option to search for similar words, and also try unchecking the hide out of stock option.</p>
-    <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">Jazakallah Khair for using this site! Please let me know if you have any stores to add or feedback.</p>
     <hr class="my-6" />
     <h1 class="text-lg font-bold">Feedback</h1>
 
-    <form action="https://formsubmit.co/aamohammed4556@gmail.com" method="POST" class="flex flex-col space-y-6" on:submit|preventDefault={handleFeedback} >
-        {#if feedBackSent === 2}    
+    <form
+        action="https://formsubmit.co/aamohammed4556@gmail.com"
+        method="POST"
+        class="flex flex-col space-y-6"
+        on:submit|preventDefault={handleFeedback}
+    >
+        {#if feedBackSent === 2}
             <Spinner color="purple" class="h-16 w-16" />
         {:else if feedBackSent === 3}
             <h1 class="text-lg font-bold">Thank you for your feedback!</h1>
         {:else}
-        <Label class="space-y-2">
-            <span>Email (optional)</span>
-            <Input type="email" name="email" placeholder="name@company.com"/>
-        </Label>
-        <Label class="space-y-2">
-            <span>Feedback</span>
-            <Input placeholder="Super important feedback" type="text" name="feedback" required />
+            <Label class="space-y-2">
+                <span>Email (optional)</span>
+                <Input
+                    type="email"
+                    name="email"
+                    placeholder="name@company.com"
+                />
             </Label>
-            <Button class="self-start sm:w-auto w-full" type="submit" size={"sm"}>Submit</Button>
+            <Label class="space-y-2">
+                <span>Feedback</span>
+                <Input
+                    placeholder="Super important feedback"
+                    type="text"
+                    name="feedback"
+                    required
+                />
+            </Label>
+            <Button
+                class="self-start sm:w-auto w-full"
+                type="submit"
+                size={"sm"}>Submit</Button
+            >
         {/if}
     </form>
 
     <svelte:fragment slot="footer">
-      <Button outline={true} on:click={() => clickOutsideModal = false}>Close</Button>
+        <Button outline={true} on:click={() => (clickOutsideModal = false)}
+            >Close</Button
+        >
     </svelte:fragment>
-  </Modal>
+</Modal>

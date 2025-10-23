@@ -3,11 +3,15 @@
     import Button from "flowbite-svelte/Button.svelte";
     import type { PageData } from "./$types";
     import { enhance } from "$app/forms";
+    import GithubSolid from "flowbite-svelte-icons/GithubSolid.svelte";
+    import ArrowRightOutline from "flowbite-svelte-icons/ArrowRightOutline.svelte";
 
     export let data: PageData;
 </script>
 
 <title>Islamic Book Search</title>
+
+
 <div
     class="h-screen"
     style="background-image: url(https://cdn.modrinth.com/landing-new/landing.webp); background-size: cover; padding-bottom: 10rem;"
@@ -20,23 +24,36 @@
             <p class="text-slate-300 sm:text-lg text-md mb-8">
                 Search from a collection of <span class="font-bold text-white">{data.props.total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</span> Islamic books from popular bookstores.
             </p>
-            <form method="POST" use:enhance>
-                <Search
-                    required
-                    autofocus
-                    autocomplete={"off"}
-                    name={"search"}
-                    size={"lg"}
-                    placeholder={"Search for a book"}
-                    class="font-semibold"
-                />
-                <Button
-                    type={"submit"}
-                    autocomplete={"off"}
-                    color={"purple"}
-                    class={"mt-6"}
-                    size={"lg"}>Search</Button
+            <form method="POST" use:enhance class="flex flex-col items-center">
+                <div class="flex w-full max-w-4xl">
+                    <Search
+                        required
+                        autofocus
+                        autocomplete={"off"}
+                        name={"search"}
+                        size={"lg"}
+                        placeholder={"Search in English or Arabic "}
+                        class="font-semibold flex-1"
+                    />
+                    <Button
+                        type={"submit"}
+                        autocomplete={"off"}
+                        color={"purple"}
+                        class={"ml-2 px-3"}
+                        size={"lg"}
+                    >
+                        <ArrowRightOutline class="w-6 h-6 font-bold" />
+                    </Button>
+                </div>
+                <Button 
+                    class="mt-4 hover:text-white transition-colors duration-200" 
+                    href="https://github.com/PhantomLel/Islamic-Book-Compare" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
                 >
+                    <GithubSolid class="w-5 h-5 mr-2" />
+                    GitHub
+                </Button>
             </form>
             <!-- <h1 class="text-3xl text-white mt-12 font-bold">Featured Books</h1> -->
         </div>

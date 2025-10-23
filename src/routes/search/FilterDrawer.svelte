@@ -10,7 +10,7 @@
     import Select from "flowbite-svelte/Select.svelte";
 
     import { onMount } from "svelte";
-    import { sineIn } from "svelte/easing";
+    import { cubicOut } from "svelte/easing";
     import { page } from "$app/stores";
 
     export let hidden = true;
@@ -23,8 +23,8 @@
     // Transition parameters for the Drawer component
     let transitionParams = {
         y: 350, 
-        duration: 200,
-        easing: sineIn,
+        duration: 300,
+        easing: cubicOut,
     };
 
     let storeExclude = new URLSearchParams($page.url.searchParams).getAll("exclude");
@@ -165,7 +165,6 @@
                         <Checkbox
                             on:change={updateSearch}
                             bind:checked={filter.checked}
-                            label={filter.value}
                             value={filter.value}
                             class="text-slate-300"
                         >
