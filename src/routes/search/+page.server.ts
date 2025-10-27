@@ -28,12 +28,13 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 
   const message = `*Book Search Alert*
 
+• Search: \`${search || 'None'}\`
+
 📍 *Client Info:*
 • IP: \`${ip}\`
 • User Agent: \`${userAgent}\`
 
 🔎 *Search Parameters:*
-• Search: *${search || 'None'}*
 • Author: *${author || 'None'}*
 • Page: \`${page}\`
 • Show: \`${show}\` results

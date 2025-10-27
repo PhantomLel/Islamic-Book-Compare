@@ -12,7 +12,6 @@
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
-    import Alert from "flowbite-svelte/Alert.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -41,6 +40,17 @@
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
     let instock = $page.url.searchParams.get("instock") !== "false"; // Default instock filter
     let exactSearch = $page.url.searchParams.get("exactSearch") !== "false"; // Default exact search filter
+    
+    // Check if filters are active (non-default values)
+    $: hasActiveFilters = {
+        hasExcludedStores: $page.url.searchParams.getAll("exclude").length > 0,
+        hasFuzzySearch: $page.url.searchParams.get("fuzzy") === "true",
+        notDefaultShow: $page.url.searchParams.get("show") && $page.url.searchParams.get("show") !== "15",
+    };
+    
+    $: hasAnyActiveFilter = hasActiveFilters.hasExcludedStores || 
+                           hasActiveFilters.hasFuzzySearch || 
+                           hasActiveFilters.notDefaultShow;
 
     let timer: ReturnType<typeof setTimeout>;
 
@@ -226,10 +236,16 @@
             <Button
                 on:click={() => (filtersHidden = !filtersHidden)}
                 outline={!filtersHidden}
-                class="mt-3"
+                class="mt-3 relative"
             >
                 <FilterOutline class="w-3 h-3 mr-1" />
                 Filters
+                {#if hasAnyActiveFilter}
+                    <span class="absolute -top-1 -left-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-600 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+                    </span>
+                {/if}
             </Button>
             <div>
                 <Select

@@ -85,12 +85,13 @@
 </script>
 
 <Drawer
-    divClass={"overflow-y-scroll max-h-3/4 z-50 p-4 bg-white dark:bg-gray-800"}
+    divClass={"overflow-y-scroll max-h-[80vh] sm:max-h-3/4 z-50 p-4 bg-white dark:bg-gray-800 rounded-t-xl"}
     width={"w-full"}
     placement={"bottom"}
     transitionType="fly"
     {transitionParams}
     bind:hidden
+    backdrop={true}
 >
     <div class="sm:w-1/4 w-full">
         <Search
