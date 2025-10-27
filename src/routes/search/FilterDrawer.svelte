@@ -76,7 +76,7 @@
         }
 
         query.set("show", show.toString());
-        query.delete("page");
+        query.set("page", "1");
         // Update the URL without losing focus
         goto(`?${query.toString()}`, {
             keepFocus: true,

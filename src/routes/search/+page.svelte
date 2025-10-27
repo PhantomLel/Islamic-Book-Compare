@@ -169,9 +169,11 @@
 
             if (!exactSearch) {
                 query.set("exactSearch", exactSearch.toString());
+                query.set("page", "1");
             } else {
                 query.delete("exactSearch");
-            }
+                query.set("page", "1");
+            } 
 
 
             // if the query is the same as the current query, do not reload the page
