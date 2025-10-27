@@ -70,6 +70,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
     const searchDesc = url.searchParams.get('searchDesc') !== 'false';
     const exclude = url.searchParams.getAll('exclude');  
     const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
+    const exactSearch = url.searchParams.get('exactSearch') !== 'false';
 
     const queries: any[] = [];
 
@@ -134,19 +135,32 @@ export const load: PageServerLoad = async ({ url, request }) => {
           }
       );
     } else if (search) {
+      if (exactSearch) {
       queries.push( 
         {
           $search: {
-            index: "default",
-            autocomplete: { 
-              query: search,
+            index: "keyword",
+            regex: { 
+              query: `.*${search.toLowerCase()}.*`,
               path: "title",
-              // matchCriteria: "all",
-              fuzzy: fuzzySearch ? {} : undefined
+              allowAnalyzedField: true,
             }
           }
         }
-      );
+      ); } else {
+        queries.push( 
+          {
+            $search: {
+              index: "default",
+              autocomplete: { 
+                query: search.toLowerCase(),
+                path: "title",
+                fuzzy: fuzzySearch ? {} : undefined
+              }
+            }
+          }
+        );
+      }
     } else if (author) {
       queries.push(
         {

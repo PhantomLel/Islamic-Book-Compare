@@ -39,7 +39,8 @@
 
     // State variables for sorting and filtering
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
-    let instock = $page.url.searchParams.get("instock") === "true"; // Default instock filter
+    let instock = $page.url.searchParams.get("instock") !== "false"; // Default instock filter
+    let exactSearch = $page.url.searchParams.get("exactSearch") !== "false"; // Default exact search filter
 
     let timer: ReturnType<typeof setTimeout>;
 
@@ -48,7 +49,6 @@
     let filtersHidden = true;
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
-    let searchDesc = $page.url.searchParams.get("searchDesc") === "true";
 
     let pageNum: number;
 
@@ -151,9 +151,18 @@
             query.set("author", trimmedAuthor);
 
             query.set("sort", sortByValue);
-            query.set("instock", instock.toString());
-            query.set("searchDesc", searchDesc.toString());
-            query.set("page", "1");
+            if (!instock) {
+                query.set("instock", instock.toString());
+            } else {
+                query.delete("instock");
+            }
+
+            if (!exactSearch) {
+                query.set("exactSearch", exactSearch.toString());
+            } else {
+                query.delete("exactSearch");
+            }
+
 
             // if the query is the same as the current query, do not reload the page
             if (query.toString() === $page.url.searchParams.toString()) {
@@ -243,13 +252,15 @@
                 >
                     Hide Out of Stock
                 </Checkbox>
+
                 <Checkbox
-                    bind:checked={searchDesc}
+                    bind:checked={exactSearch}
                     on:change={() => updateSearch()}
                 >
-                    Search Description
+                    Match Exact Search
                 </Checkbox>
             </div>
+ 
         </div>
     </div>
 

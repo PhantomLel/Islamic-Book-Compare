@@ -29,6 +29,7 @@
 
     let storeExclude = new URLSearchParams($page.url.searchParams).getAll("exclude");
     let fuzzy : boolean = $page.url.searchParams.get("fuzzy") === "true";
+    let searchDesc : boolean = $page.url.searchParams.get("searchDesc") === "true";
 
     let storeFilter = {
         label: "Store",
@@ -68,8 +69,14 @@
             query.delete("fuzzy");
         }
 
+        if (searchDesc) {
+            query.set("searchDesc", "true");
+        } else {
+            query.delete("searchDesc");
+        }
+
         query.set("show", show.toString());
-        query.set("page", "1");
+        query.delete("page");
         // Update the URL without losing focus
         goto(`?${query.toString()}`, {
             keepFocus: true,
@@ -125,7 +132,18 @@
     </div>
     {/if}
 
- 
+    {#if "search description".includes(filterSearch.toLowerCase())}
+    <div>
+        <Checkbox
+                class="mt-4 text-md"
+                    bind:checked={searchDesc}
+                    on:change={() => updateSearch()}
+                >
+                    Search Description
+                </Checkbox>
+    </div>
+    {/if}
+
     <div class="mt-4">
         <h3 class=" text-xl text-white font-semibold">
             {storeFilter.label}
