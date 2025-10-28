@@ -8,6 +8,7 @@
     import Modal from "flowbite-svelte/Modal.svelte";
     import Input from "flowbite-svelte/Input.svelte";
     import { notifications } from "$lib/notifications";
+    import { onMount } from "svelte";
 
     // get collections from store
     $: collections = $collectionsStore;
@@ -44,6 +45,15 @@
             handleCreateCollection();
         }
     }
+    onMount(() => {
+        fetch("/api/send-message", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ messageText: "Lists Page Opened" }),
+        });
+    });
 </script>
 
 <title>Your Collections | Islamic Book Search</title>
