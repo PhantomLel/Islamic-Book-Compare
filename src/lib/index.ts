@@ -11,3 +11,7 @@ export type Book = {
     source: string;
     instock: boolean;
 }
+export type Collection = {
+    name: string;
+    books: string[]; // book perma links
+}

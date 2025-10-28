@@ -12,6 +12,7 @@
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
+    import BookOutline from "flowbite-svelte-icons/BookOutline.svelte"
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -78,30 +79,6 @@
     beforeNavigate(() => {
         loading = true;
     });
-
-    const handleBookClick = (book: Book) => {
-        fetch("/api/book-clicked", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-            body: JSON.stringify({
-                bookTitle: book.title,
-                bookAuthor: book.author,
-                bookUrl: book.url,
-                bookPrice: book.price,
-                bookSource: book.source,
-            }),
-        })
-            .then((response) => response.json())
-            .then((data) => {
-                console.log("Book click tracked:", data);
-            })
-            .catch((error) => {
-                console.error("Failed to track book click:", error);
-            });
-    };
 
     const handleFeedback = async (event: {
         currentTarget: EventTarget & HTMLFormElement;
@@ -235,12 +212,16 @@
             >
                 <InfoCircleOutline class="w-6 h-6" />
             </Button>
+            <Button class="mt-1 self-end px-3" on:click={() => goto("/lists")} >
+                <BookOutline class=" h-4 w-4 mr-2 " />
+                Lists
+            </Button>
             <Button
                 on:click={() => (filtersHidden = !filtersHidden)}
                 outline={!filtersHidden}
-                class="mt-3 relative"
+                class="mt-3 relative px-3"
             >
-                <FilterOutline class="w-3 h-3 mr-1" />
+                <FilterOutline class="w-4 h-4 mr-1" />
                 Filters
                 {#if hasAnyActiveFilter}
                     <span class="absolute -top-1 -left-1 flex h-3 w-3">
@@ -355,7 +336,7 @@
     <div class="flex flex-wrap justify-center">
         {#each data.props.results as book}
             {#if (instock && book.instock) || !instock}
-                <BookCard {book} {loading} {handleBookClick} />
+                <BookCard {book} loading={loading} />
             {/if}
         {/each}
     </div>

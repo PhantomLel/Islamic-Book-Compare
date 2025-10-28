@@ -1,7 +1,7 @@
 import type { Actions, PageServerLoad } from './$types';
 import getDb from '$lib/server/db';
 import sendMessage from '$lib/server/telegram';
-// export const ssr = false;
+export const ssr = false;
 
 const get_stores = async () => {
     const db = await getDb();
@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
     const page = parseInt(url.searchParams.get('page') || '1');
     const show = parseInt(url.searchParams.get('show') || '15');
     const sort = url.searchParams.get('sort') || 'low';
-    const instock = url.searchParams.get('instock') === 'true';
+    const instock = url.searchParams.get('instock') !== 'false';
     const searchDesc = url.searchParams.get('searchDesc') !== 'false';
     const exclude = url.searchParams.getAll('exclude');  
     const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
