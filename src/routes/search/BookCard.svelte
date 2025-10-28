@@ -68,7 +68,7 @@
                 {book.title.substring(0, 70) +
                     (book.title.length > 70 ? "..." : "")}
             </h1>
-            <p class="sm:text-lg text-sm text-slate-300">
+            <p class="sm:text-md text-sm text-slate-300">
                 {book.author == null ? "" : book.author.substring(0, 40)}
             </p>
             <p

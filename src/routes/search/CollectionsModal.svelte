@@ -64,7 +64,7 @@
         {/each}
         <div class="flex flex-row items-center gap-2"> 
         <InfoCircleOutline class="h-6 w-6 " /> 
-        <p class="text-sm ">Collections are saved locally in your browser.</p>
+        <p class="text-sm ">Collections are saved locally in your browser. Prices automatically update when they are added to a collection.</p>
         </div>
     </div>
 

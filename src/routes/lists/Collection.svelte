@@ -9,7 +9,7 @@
 
     export let collection: Collection;
 
-    let expanded = true;
+    let expanded = false;
     let bookData: Book[] = [];
     let loading = false;
 
