@@ -9,6 +9,15 @@
     import Input from "flowbite-svelte/Input.svelte";
     import { notifications } from "$lib/notifications";
     import { onMount } from "svelte";
+    import { browser } from "$app/environment";
+
+    function navigateBack() {
+        if (browser) {
+            window.history.back();
+        } else {
+            goto('/search');
+        }
+    }
 
     // get collections from store
     $: collections = $collectionsStore;
@@ -60,7 +69,7 @@
 
 <div
 >   
-    <Button on:click={() => goto("/search")} class="m-5 self-end px-3"> 
+    <Button on:click={() => navigateBack()} class="m-5 self-end px-3"> 
         <ArrowLeftOutline class="w-6 h-6" />
         Back To Search
     </Button>
