@@ -17,6 +17,22 @@
     export let stores: string[] = [];
     export let show = 15;
 
+    const storeCountries: Record<string, string> = {
+        "Dar Al-Muttaqin": "UK",
+        "Maktabah Al-Hidayah": "US",
+        "Ismaeel Books": "UK",
+        "Al-Badr": "UK",
+        "Al-Balagh": "US",
+        "Al-Kunuz": "UK",
+        "Qurtuba": "UK",
+        "Sifatu Safwa": "UK",
+        "Zakariyya Books": "UK",
+        "Salafi Books": "UK",
+        "UmmahSpot": "US",
+        "Al-Hidayaah": "UK",
+        "Buraq Books": "UK",
+    }
+
 
     let filterSearch = "";
 
@@ -187,7 +203,7 @@
                             value={filter.value}
                             class="text-slate-300"
                         >
-                            {filter.value}
+                            {filter.value} <span class="text-xs text-gray-500">({storeCountries[filter.value] || "N/A"})</span>
                         </Checkbox>
                     </div>
                 {/if}
