@@ -40,7 +40,7 @@
     // State variables for sorting and filtering
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
     let instock = $page.url.searchParams.get("instock") !== "false"; // Default instock filter
-    let exactSearch = $page.url.searchParams.get("exactSearch") !== "false"; // Default exact search filter
+    let exactSearch = $page.url.searchParams.get("exactSearch") === "true"; // Default exact search filter
     
     // Check if filters are active (non-default values)
     $: hasActiveFilters = {
@@ -144,7 +144,7 @@
                 query.delete("instock");
             }
 
-            if (!exactSearch) {
+            if (exactSearch) {
                 query.set("exactSearch", exactSearch.toString());
                 query.set("page", "1");
             } else {

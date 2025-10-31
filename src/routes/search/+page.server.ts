@@ -71,7 +71,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
     const searchDesc = url.searchParams.get('searchDesc') !== 'false';
     const exclude = url.searchParams.getAll('exclude');  
     const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
-    const exactSearch = url.searchParams.get('exactSearch') !== 'false';
+    const exactSearch = url.searchParams.get('exactSearch') === 'true';
 
     const queries: any[] = [];
 
