@@ -73,6 +73,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
     const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
     const exactSearch = url.searchParams.get('exactSearch') === 'true';
 
+
     const queries: any[] = [];
 
     // if (search && author) {
@@ -200,7 +201,12 @@ export const load: PageServerLoad = async ({ url, request }) => {
           { $limit: show },
           { $project: { _id: 0 } }, // remove the _id field
           { $sort: sort === "rel" ? {score : -1} : { price: sort === 'low' ? 1 : -1 } },
-       ] 
+       ],
+        allPublishers: [
+          { $match: { publisher: { $exists: true, $nin: [null, ""] } } },
+          { $group: { _id: null, publishers: { $addToSet: "$publisher" } } },
+          { $project: { _id: 0, allPublishers: "$publishers" } }
+        ]
       }
     })
     let results = await db.collection('books').aggregate(queries).toArray();
@@ -208,8 +214,12 @@ export const load: PageServerLoad = async ({ url, request }) => {
     // get the total count and the documents
     const total = results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0;
     const books = results.length > 0 ? results[0].documents : [];
+    const allPublishers = results.length > 0 && results[0].allPublishers.length > 0 
+      ? results[0].allPublishers[0].allPublishers || [] 
+      : [];
 
     await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total);
+    console.log(allPublishers)
   
     return {
       props: {
@@ -217,6 +227,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
         total,
         start: (page - 1) * show + 1,
         end: Math.min(page * show, total),
+        allPublishers,
       },
       stores,
     };

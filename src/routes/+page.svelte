@@ -54,6 +54,14 @@
                     <GithubSolid class="w-5 h-5 mr-2" />
                     GitHub
                 </Button>
+                    <div class="flex flex-wrap gap-4 mt-8 w-full">
+                        <div class="bg-slate-800/70 backdrop-blur-lg p-4 rounded-xl sm:w-1/3 w-1/2 border border-slate-700/50 shadow-lg hover:shadow-sm hover:shadow-purple-500/20 hover:border-purple-500/50 hover:bg-slate-800/90 transition-all duration-300 transform " >
+                            <a href="https://ummahspot.com" target="_blank" rel="noopener noreferrer" class="flex flex-col items-center justify-center gap-3">
+                                <img src="/ummahspot.png" alt="Ummah Spot" class="w-2/3 h-auto transition-transform duration-300 hover:scale-105">
+                                <p class="text-sm text-slate-300 font-medium mt-2 hover:text-white transition-colors duration-300">Unearth the Rarest Arabic Books</p>
+                            </a>
+                        </div>
+                    </div>
             </form>
             <!-- <h1 class="text-3xl text-white mt-12 font-bold">Featured Books</h1> -->
         </div>

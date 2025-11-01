@@ -3,6 +3,9 @@ import type { RequestHandler } from './$types';
 import sendMessage from '$lib/server/telegram';
 
 export const POST: RequestHandler = async ({ request }) => {
+    if (process.env.PRODUCTION === 'false') {
+        return json({ success: true });
+    }
     try {
         const { bookTitle, bookAuthor, bookUrl, bookPrice, bookSource } = await request.json();
         
