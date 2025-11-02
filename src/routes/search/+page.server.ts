@@ -31,7 +31,7 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 • Search: \`${search || 'None'}\`
 
 📍 *Client Info:*
-• IP: \`${ip}\`
+• IP: https://ipinfo.io/${ip}
 • User Agent: \`${userAgent}\`
 
 🔎 *Search Parameters:*
