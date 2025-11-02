@@ -4,9 +4,11 @@ import sendMessage from '$lib/server/telegram';
 import getDb from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request }) => {
-    if (process.env.PRODUCTION === 'true') {
+
+    if (process.env.PRODUCTION === 'false') {
         return json({ success: true });
     }
+
 
     try {
         const { bookTitle, bookAuthor, bookUrl, bookPrice, bookSource } = await request.json();
