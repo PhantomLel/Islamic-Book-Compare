@@ -37,7 +37,6 @@
                     />
                     <Button
                         type={"submit"}
-                        autocomplete={"off"}
                         color={"purple"}
                         class={"ml-2 px-3"}
                         size={"lg"}

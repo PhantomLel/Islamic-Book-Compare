@@ -12,6 +12,8 @@
     export let book: Book;
     export let loading = false;
     export let width = "sm:w-1/4 w-full";
+    export let currency =  { value: "USD", name: "USD", rate: 1, symbol: "$"};
+
 
     $: isBookmarked = $collectionsStore.some((collection) => collection.books.includes(book.url));
 
@@ -83,9 +85,9 @@
             <p
                 class="sm:text-sm text-lg mt-2 text-white font-bold align-text-bottom"
             >
-                ${book.price == null
+                { currency.value !== "USD" ? "~" : "" }{currency.symbol}{book.price == null
                     ? "N/A"
-                    : parseFloat(book.price.toString()).toFixed(2)}
+                    : (parseFloat(book.price.toString()) * currency.rate).toFixed(2)}
             </p>
             <p class="mt-4">
                 {#if book.instock}

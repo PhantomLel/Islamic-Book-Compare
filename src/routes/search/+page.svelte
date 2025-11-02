@@ -12,7 +12,7 @@
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
-    import BookOutline from "flowbite-svelte-icons/BookOutline.svelte"
+    import BookOutline from "flowbite-svelte-icons/BookOutline.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
@@ -41,17 +41,20 @@
     let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
     let instock = $page.url.searchParams.get("instock") !== "false"; // Default instock filter
     let exactSearch = $page.url.searchParams.get("exactSearch") === "true"; // Default exact search filter
-    
+
     // Check if filters are active (non-default values)
     $: hasActiveFilters = {
         hasExcludedStores: $page.url.searchParams.getAll("exclude").length > 0,
         hasFuzzySearch: $page.url.searchParams.get("fuzzy") === "true",
-        notDefaultShow: $page.url.searchParams.get("show") && $page.url.searchParams.get("show") !== "15",
+        notDefaultShow:
+            $page.url.searchParams.get("show") &&
+            $page.url.searchParams.get("show") !== "15",
     };
-    
-    $: hasAnyActiveFilter = hasActiveFilters.hasExcludedStores || 
-                           hasActiveFilters.hasFuzzySearch || 
-                           hasActiveFilters.notDefaultShow;
+
+    $: hasAnyActiveFilter =
+        hasActiveFilters.hasExcludedStores ||
+        hasActiveFilters.hasFuzzySearch ||
+        hasActiveFilters.notDefaultShow;
 
     let timer: ReturnType<typeof setTimeout>;
 
@@ -62,6 +65,15 @@
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
 
     let pageNum: number;
+
+    const currencies = [
+        { value: "USD", name: "USD", rate: 1, symbol: "$"},
+        { value: "GBP", name: "GBP", rate: 0.75, symbol: "£"},
+        { value: "EUR", name: "EUR", rate: 0.85, symbol: "€"},
+        { value: "TRY", name: "TRY", rate: 42, symbol: "₺"},
+    ];
+
+    let currency = $page.url.hash.split("#")[1] || "USD";
 
     $: {
         pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
@@ -150,8 +162,7 @@
             } else {
                 query.delete("exactSearch");
                 query.set("page", "1");
-            } 
-
+            }
 
             // if the query is the same as the current query, do not reload the page
             if (query.toString() === $page.url.searchParams.toString()) {
@@ -212,7 +223,7 @@
             >
                 <InfoCircleOutline class="w-6 h-6" />
             </Button>
-            <Button class="mt-1 self-end px-3" on:click={() => goto("/lists")} >
+            <Button class="mt-1 self-end px-3" on:click={() => goto("/lists")}>
                 <BookOutline class=" h-4 w-4 mr-2 " />
                 Lists
             </Button>
@@ -225,8 +236,12 @@
                 Filters
                 {#if hasAnyActiveFilter}
                     <span class="absolute -top-1 -left-1 flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-600 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-600 opacity-75"
+                        ></span>
+                        <span
+                            class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"
+                        ></span>
                     </span>
                 {/if}
             </Button>
@@ -244,6 +259,19 @@
                     ]}
                 />
             </div>
+            <div>
+                <Select
+                    on:change={() => {
+                        window.location.hash = currency;
+                    }}
+                    class="mt-3 self-start"
+                    size={"md"}
+                    placeholder={"Currency"}
+                    bind:value={currency}
+                    items={currencies.map((currency) => ({ value: currency.value, name: currency.name + " (" + currency.symbol + ")" }))}
+                />
+            </div>
+
             <div class="flex flex-col gap-3">
                 <Checkbox
                     bind:checked={instock}
@@ -259,7 +287,6 @@
                     Match Exact Search
                 </Checkbox>
             </div>
- 
         </div>
     </div>
 
@@ -336,7 +363,7 @@
     <div class="flex flex-wrap justify-center">
         {#each data.props.results as book}
             {#if (instock && book.instock) || !instock}
-                <BookCard {book} loading={loading} />
+                <BookCard {book} {loading} currency={currencies.find((c) => c.value === currency)} />
             {/if}
         {/each}
     </div>
@@ -451,7 +478,7 @@
                     <CoffeeIcon className="w-5 h-5 mr-2 text-white" />
                     Support the Site!
                 </Button>
- 
+            </a>
         </div>
     </div>
 
