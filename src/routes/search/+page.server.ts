@@ -76,6 +76,29 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
   sendMessage(message).catch(error => {
     console.error('Failed to send usage alert:', error);
   });
+
+  if (process.env.PRODUCTION === 'true') {
+    const db = await getDb();
+    db.collection('usage').insertOne({
+      ip,
+      type: 'search',
+      search,
+      author,
+      page,
+      show,
+      sort,
+      instock,
+      exclude,
+      fuzzySearch,
+      exactSearch,
+      total,
+      timestamp: new Date().toISOString().slice(0, 16)
+    }).catch(error => {
+      console.error('Failed to log usage:', error);
+    });
+  }
+
+
 }
 
 
