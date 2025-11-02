@@ -71,6 +71,7 @@
         { value: "GBP", name: "GBP", rate: 0.75, symbol: "£"},
         { value: "EUR", name: "EUR", rate: 0.85, symbol: "€"},
         { value: "TRY", name: "TRY", rate: 42, symbol: "₺"},
+        {value: "ZAR", name: "ZAR", rate: 18, symbol: "R"},
     ];
 
     let currency = $page.url.hash.split("#")[1] || "USD";
