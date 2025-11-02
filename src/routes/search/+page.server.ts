@@ -18,17 +18,15 @@ const get_stores = async () => {
 
 let stores: string[] = [];
 
-const sendUsageAlert = async (request: Request, search: string, author: string, page: number, show: number, sort: string, instock: boolean, exclude: string[], fuzzySearch: boolean, total: number) => {
-  if (request.headers.get('host') !== 'kitaabfinder.com') {
-    return;
-  }
+const sendUsageAlert = async (request: Request, search: string, author: string, page: number, show: number, sort: string, instock: boolean, exclude: string[], fuzzySearch: boolean, total: number, exactSearch: boolean) => {
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
   const userAgent = request.headers.get('user-agent') || 'Unknown User Agent';
 
   const message = `*Book Search Alert*
 
-• Search: \`${search || 'None'}\`
+• Search: ${search}
+• Link: https://kitaabfinder.com/search?search=${encodeURIComponent(search)}&author=${encodeURIComponent(author)}&page=${page}&show=${show}&sort=${sort}&instock=${instock}&exclude=${exclude.join(',')}&fuzzy=${fuzzySearch}&exactSearch=${exactSearch}
 
 📍 *Client Info:*
 • IP: https://ipinfo.io/${ip}
@@ -41,6 +39,7 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 • Sort: \`${sort}\`
 • In Stock Only: ${instock ? '✅ Yes' : '❌ No'}
 • Exclude Stores: ${exclude.length > 0 ? exclude.join(', ') : 'None'}
+• Exact Search: ${exactSearch ? '✅ Enabled' : '❌ Disabled'}
 • Fuzzy Search: ${fuzzySearch ? '✅ Enabled' : '❌ Disabled'}
 
 *Results:*
@@ -218,8 +217,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
       ? results[0].allPublishers[0].allPublishers || [] 
       : [];
 
-    await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total);
-    console.log(allPublishers)
+    await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
   
     return {
       props: {
