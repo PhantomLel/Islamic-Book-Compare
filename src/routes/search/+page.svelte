@@ -459,7 +459,10 @@
                         class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
                         >•</span
                     >
-                    Contact me at aamohammed4556@gmail.com if you would like to contribute.
+                    <div>
+
+                    If you are a <b>store owner</b>, I would love to integrate your store. Please contact me at aamohammed4556@gmail.com.
+                    </div>
                 </li>
             </ul>
             <a
