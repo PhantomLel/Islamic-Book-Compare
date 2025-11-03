@@ -73,11 +73,11 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 
 ⏰ ${new Date().toLocaleString()}`;
 
-  sendMessage(message).catch(error => {
-    console.error('Failed to send usage alert:', error);
-  });
-
   if (process.env.PRODUCTION === 'true') {
+    sendMessage(message).catch(error => {
+      console.error('Failed to send usage alert:', error);
+    });
+
     const db = await getDb();
     db.collection('usage').insertOne({
       ip,
