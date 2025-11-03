@@ -7,7 +7,7 @@ import getDb from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request }) => {
     const { data, event, merchant} = await request.json();
-    if (event !== 'app.installed') {
+    if (event !== 'app.store.authorize') {
         return json({ message: 'Invalid event' });
     }
 
