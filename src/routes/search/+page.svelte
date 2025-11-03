@@ -218,12 +218,6 @@
             </div>
         </div>
         <div class="flex gap-3 mt-3 flex-wrap items-center">
-            <Button
-                on:click={() => (clickOutsideModal = true)}
-                class="mt-1 self-end !p-2"
-            >
-                <InfoCircleOutline class="w-6 h-6" />
-            </Button>
             <Button class="mt-1 self-end px-3" on:click={() => goto("/lists")}>
                 <BookOutline class=" h-4 w-4 mr-2 " />
                 Lists
@@ -378,6 +372,18 @@
             }}
         />
     {/if}
+</div>
+
+<!-- Sticky Info Button -->
+<div class="fixed bottom-6 right-6 z-50">
+    <Button
+        on:click={() => (clickOutsideModal = true)}
+        class="!p-3 rounded-full shadow-lg hover:shadow-xl transition-shadow"
+        size="lg"
+    >
+        <InfoCircleOutline class="w-6 h-6 mr-2" />
+        Info
+    </Button>
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
