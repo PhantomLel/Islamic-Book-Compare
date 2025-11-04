@@ -31,6 +31,7 @@
         "UmmahSpot": "US",
         "Al-Hidayaah": "UK",
         "Buraq Books": "UK",
+        "Kastntinya": "TUR",
     }
 
 
