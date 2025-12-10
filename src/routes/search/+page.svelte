@@ -1,28 +1,24 @@
 <script lang="ts">
     import CoffeeIcon from "./CoffeeIcon.svelte";
     import Button from "flowbite-svelte/Button.svelte";
-    import Select from "flowbite-svelte/Select.svelte";
-    import Checkbox from "flowbite-svelte/Checkbox.svelte";
-    import FloatingLabelInput from "flowbite-svelte/FloatingLabelInput.svelte";
     import Spinner from "flowbite-svelte/Spinner.svelte";
     import Modal from "flowbite-svelte/Modal.svelte";
     import Label from "flowbite-svelte/Label.svelte";
     import Input from "flowbite-svelte/Input.svelte";
-    import FilterOutline from "flowbite-svelte-icons/FilterOutline.svelte";
     import InfoCircleOutline from "flowbite-svelte-icons/InfoCircleOutline.svelte";
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
-    import BookOutline from "flowbite-svelte-icons/BookOutline.svelte";
     import type { PageData } from "./$types";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
     import Pagination from "./Pagination.svelte";
-    import { afterNavigate, beforeNavigate, goto } from "$app/navigation";
+    import { afterNavigate, beforeNavigate } from "$app/navigation";
     import { onMount } from "svelte";
     import FilterDrawer from "./FilterDrawer.svelte";
-    import type { Book } from "$lib";
     import GithubSolid from "flowbite-svelte-icons/GithubSolid.svelte";
     import CodeOutline from "flowbite-svelte-icons/CodeOutline.svelte";
+    import SearchBar from "$lib/SearchBar.svelte";
+
     // The data prop is provided by the parent component
     export let data: PageData;
 
@@ -33,14 +29,10 @@
     });
 
     let clickOutsideModal = false;
+    
     // Initialize the search term from the provided data
     let search = $page.url.searchParams.get("search") || "";
     let author = $page.url.searchParams.get("author") || "";
-
-    // State variables for sorting and filtering
-    let sortByValue = $page.url.searchParams.get("sort") || "low"; // Default sort option
-    let instock = $page.url.searchParams.get("instock") !== "false"; // Default instock filter
-    let exactSearch = $page.url.searchParams.get("exactSearch") === "true"; // Default exact search filter
 
     // Check if filters are active (non-default values)
     $: hasActiveFilters = {
@@ -54,9 +46,7 @@
     $: hasAnyActiveFilter =
         hasActiveFilters.hasExcludedStores ||
         hasActiveFilters.hasFuzzySearch ||
-        hasActiveFilters.notDefaultShow;
-
-    let timer: ReturnType<typeof setTimeout>;
+        !!hasActiveFilters.notDefaultShow;
 
     let loading = false;
     let feedBackSent = 1;
@@ -67,11 +57,11 @@
     let pageNum: number;
 
     const currencies = [
-        { value: "USD", name: "USD", rate: 1, symbol: "$"},
-        { value: "GBP", name: "GBP", rate: 0.75, symbol: "£"},
-        { value: "EUR", name: "EUR", rate: 0.85, symbol: "€"},
-        { value: "TRY", name: "TRY", rate: 42, symbol: "₺"},
-        {value: "ZAR", name: "ZAR", rate: 18, symbol: "R"},
+        { value: "USD", name: "USD", rate: 1, symbol: "$" },
+        { value: "GBP", name: "GBP", rate: 0.75, symbol: "£" },
+        { value: "EUR", name: "EUR", rate: 0.85, symbol: "€" },
+        { value: "TRY", name: "TRY", rate: 42, symbol: "₺" },
+        { value: "ZAR", name: "ZAR", rate: 18, symbol: "R" },
     ];
 
     let currency = $page.url.hash.split("#")[1] || "USD";
@@ -130,160 +120,32 @@
             });
     };
 
-    // Function to update the search query with a debounce effect
-    const updateSearch = () => {
-        clearTimeout(timer); // Clear any existing timer
+    // Get instock value from URL for BookCard filtering
+    $: instock = $page.url.searchParams.get("instock") !== "false";
 
-        const trimmedSearch = search.trim();
-        const trimmedAuthor = author.trim();
+    function handleToggleFilters() {
+        filtersHidden = !filtersHidden;
+    }
 
-        if (trimmedSearch === "" && trimmedAuthor === "") {
-            loading = false;
-            return;
-        }
-        loading = true;
-
-        timer = setTimeout(() => {
-            let query = new URLSearchParams($page.url.searchParams.toString());
-
-            query.set("search", trimmedSearch);
-
-            query.set("author", trimmedAuthor);
-
-            query.set("sort", sortByValue);
-            if (!instock) {
-                query.set("instock", instock.toString());
-            } else {
-                query.delete("instock");
-            }
-
-            if (exactSearch) {
-                query.set("exactSearch", exactSearch.toString());
-                query.set("page", "1");
-            } else {
-                query.delete("exactSearch");
-                query.set("page", "1");
-            }
-
-            // if the query is the same as the current query, do not reload the page
-            if (query.toString() === $page.url.searchParams.toString()) {
-                loading = false;
-                return;
-            }
-
-            // Reload the page with the updated query parameters
-            goto(`?${query.toString()}`, {
-                keepFocus: true,
-            });
-        }, 700);
-    };
+    function handleLoading(event: CustomEvent<boolean>) {
+        loading = event.detail;
+    }
 </script>
 
 <title>
     {search ? search : author ? author : "Search"} | Islamic Book Search
 </title>
+
 <div class="pb-12">
-    <div class=" sm:mx-auto bg-gray-800 p-6 m-5 rounded-xl sm:w-1/2">
-        <div class="gap-2 flex sm:flex-nowrap flex-wrap">
-            <div class="sm:w-1/2 w-full">
-                <FloatingLabelInput
-                    id={"search"}
-                    required
-                    on:input={(e) => {
-                        updateSearch(); // Call updateSearch on input change
-                    }}
-                    bind:value={search}
-                    class="w-full"
-                    autocomplete={"off"}
-                    name={"search"}
-                    style={"filled"}
-                >
-                    Title
-                </FloatingLabelInput>
-            </div>
-            <div class="sm:w-1/2 w-full">
-                <FloatingLabelInput
-                    id={"author"}
-                    bind:value={author}
-                    on:input={(e) => {
-                        // if space is pressed, do not update the search
-                        updateSearch(); // Call updateSearch on input change
-                    }}
-                    autocomplete={"off"}
-                    name={"author"}
-                    style={"filled"}
-                >
-                    Author
-                </FloatingLabelInput>
-            </div>
-        </div>
-        <div class="flex gap-3 mt-3 flex-wrap items-center">
-            <Button class="mt-1 self-end px-3" on:click={() => goto("/lists")}>
-                <BookOutline class=" h-4 w-4 mr-2 " />
-                Lists
-            </Button>
-            <Button
-                on:click={() => (filtersHidden = !filtersHidden)}
-                outline={!filtersHidden}
-                class="mt-3 relative px-3"
-            >
-                <FilterOutline class="w-4 h-4 mr-1" />
-                Filters
-                {#if hasAnyActiveFilter}
-                    <span class="absolute -top-1 -left-1 flex h-3 w-3">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-600 opacity-75"
-                        ></span>
-                        <span
-                            class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"
-                        ></span>
-                    </span>
-                {/if}
-            </Button>
-            <div>
-                <Select
-                    on:change={() => updateSearch()}
-                    class="mt-3 self-start"
-                    size={"md"}
-                    placeholder={"Sort by"}
-                    bind:value={sortByValue}
-                    items={[
-                        { value: "low", name: "Lowest Price" },
-                        { value: "high", name: "Highest Price" },
-                        { value: "rel", name: "Relevance" },
-                    ]}
-                />
-            </div>
-            <div>
-                <Select
-                    on:change={() => {
-                        window.location.hash = currency;
-                    }}
-                    class="mt-3 self-start"
-                    size={"md"}
-                    placeholder={"Currency"}
-                    bind:value={currency}
-                    items={currencies.map((currency) => ({ value: currency.value, name: currency.name + " (" + currency.symbol + ")" }))}
-                />
-            </div>
-
-            <div class="flex flex-col gap-3">
-                <Checkbox
-                    bind:checked={instock}
-                    on:change={() => updateSearch()}
-                >
-                    Hide Out of Stock
-                </Checkbox>
-
-                <Checkbox
-                    bind:checked={exactSearch}
-                    on:change={() => updateSearch()}
-                >
-                    Match Exact Search
-                </Checkbox>
-            </div>
-        </div>
-    </div>
+    <SearchBar
+        mode="full"
+        initialSearch={search}
+        initialAuthor={author}
+        {hasAnyActiveFilter}
+        bind:currency
+        on:toggleFilters={handleToggleFilters}
+        on:loading={handleLoading}
+    />
 
     <div class="flex justify-center">
         {#if data.props.results.length === 0}
@@ -358,7 +220,11 @@
     <div class="flex flex-wrap justify-center">
         {#each data.props.results as book}
             {#if (instock && book.instock) || !instock}
-                <BookCard {book} {loading} currency={currencies.find((c) => c.value === currency)} />
+                <BookCard
+                    {book}
+                    {loading}
+                    currency={currencies.find((c) => c.value === currency)}
+                />
             {/if}
         {/each}
     </div>
@@ -460,8 +326,9 @@
                         >•</span
                     >
                     <div>
-
-                    If you are a <b>store owner</b>, I would love to integrate your store. Please contact me at aamohammed4556@gmail.com.
+                        If you are a <b>store owner</b>, I would love to
+                        integrate your store. Please contact me at
+                        aamohammed4556@gmail.com.
                     </div>
                 </li>
             </ul>
@@ -482,9 +349,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                <Button
-                    class=" hover:text-white transition-colors duration-200"
-                >
+                <Button class="hover:text-white transition-colors duration-200">
                     <CoffeeIcon className="w-5 h-5 mr-2 text-white" />
                     Support the Site!
                 </Button>
@@ -508,11 +373,7 @@
         {:else}
             <Label class="space-y-2">
                 <span>Email (optional)</span>
-                <Input
-                    type="email"
-                    name="email"
-                    placeholder="name@company.com"
-                />
+                <Input type="email" name="email" placeholder="name@company.com" />
             </Label>
             <Label class="space-y-2">
                 <span>Feedback</span>
@@ -523,10 +384,8 @@
                     required
                 />
             </Label>
-            <Button
-                class="self-start sm:w-auto w-full"
-                type="submit"
-                size={"sm"}>Submit</Button
+            <Button class="self-start sm:w-auto w-full" type="submit" size="sm"
+                >Submit</Button
             >
         {/if}
     </form>
