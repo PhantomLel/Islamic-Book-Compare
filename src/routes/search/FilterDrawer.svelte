@@ -12,28 +12,12 @@
     import { onMount } from "svelte";
     import { cubicOut } from "svelte/easing";
     import { page } from "$app/stores";
+    import { storeCountries } from "$lib";
 
     export let hidden = true;
     export let stores: string[] = [];
     export let show = 15;
 
-    const storeCountries: Record<string, string> = {
-        "Dar Al-Muttaqin": "UK",
-        "Maktabah Al-Hidayah": "US",
-        "Ismaeel Books": "UK",
-        "Al-Badr": "UK",
-        "Al-Balagh": "US",
-        "Al-Kunuz": "UK",
-        "Qurtuba": "UK",
-        "Sifatu Safwa": "UK",
-        "Zakariyya Books": "UK",
-        "Salafi Books": "UK",
-        "UmmahSpot": "US",
-        "Al-Hidayaah": "UK",
-        "Buraq Books": "UK",
-        "Kastntinya": "TUR",
-        "Maktabah Abu Hanifah": "UK"
-    }
 
 
     let filterSearch = "";

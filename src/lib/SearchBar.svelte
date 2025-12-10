@@ -10,6 +10,7 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
+    import { storeCountries } from "$lib";
 
     /**
      * Mode of the search bar:
@@ -38,6 +39,7 @@
     let sortByValue = mode === "full" ? ($page.url.searchParams.get("sort") || "low") : "low";
     let instock = mode === "full" ? ($page.url.searchParams.get("instock") !== "false") : true;
     let exactSearch = mode === "full" ? ($page.url.searchParams.get("exactSearch") === "true") : false;
+    let country = mode === "full" ? ($page.url.searchParams.get("country") || "all") : "all";
 
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
@@ -64,6 +66,39 @@
         if (trimmedAuthor) query.set("author", trimmedAuthor);
 
         goto(`/search?${query.toString()}`);
+    }
+
+    function handleCountryChange() {
+        if (mode !== "full") return;
+
+        let query = new URLSearchParams($page.url.searchParams.toString());
+        
+        // Remove any existing country-based excludes first
+        query.delete("exclude");
+        
+        if (country !== "all") {
+            // Get all stores that don't match the selected country and exclude them
+            const storesToExclude = Object.entries(storeCountries)
+                .filter(([_, storeCountry]) => storeCountry !== country)
+                .map(([storeName, _]) => storeName);
+            
+            storesToExclude.forEach((store) => {
+                query.append("exclude", store);
+            });
+        }
+        
+        // Update the country param in URL
+        if (country === "all") {
+            query.delete("country");
+        } else {
+            query.set("country", country);
+        }
+        
+        query.set("page", "1");
+        
+        goto(`?${query.toString()}`, {
+            keepFocus: true,
+        });
     }
 
     // Full mode: Debounced search update
@@ -254,7 +289,21 @@
                     }))}
                 />
             </div>
-
+            <div>
+                <Select 
+                    on:change={handleCountryChange}
+                    class="mt-3 self-start"
+                    size="md"
+                    placeholder="Country"
+                    bind:value={country}
+                    items={[
+                        { value: "all", name: "All" },
+                        { value: "UK", name: "UK" },
+                        { value: "US", name: "US" },
+                        { value: "TUR", name: "TUR" },
+                    ]}
+                />
+            </div>
             <div class="flex flex-col gap-3">
                 <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
                     Hide Out of Stock
