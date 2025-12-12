@@ -36,7 +36,7 @@
     // State variables
     let search = initialSearch;
     let author = initialAuthor;
-    let sortByValue = mode === "full" ? ($page.url.searchParams.get("sort") || "low") : "low";
+    let sortByValue = mode === "full" ? ($page.url.searchParams.get("sort") || "rel") : "rel";
     let instock = mode === "full" ? ($page.url.searchParams.get("instock") !== "false") : true;
     let exactSearch = mode === "full" ? ($page.url.searchParams.get("exactSearch") === "true") : false;
     let country = mode === "full" ? ($page.url.searchParams.get("country") || "all") : "all";
