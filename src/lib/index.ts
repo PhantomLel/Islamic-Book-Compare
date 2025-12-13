@@ -22,20 +22,22 @@ export type Collection = {
 
 const storeCountries: Record<string, string> = {
     "Dar Al-Muttaqin": "UK",
-    "Maktabah Al-Hidayah": "US",
+    "Maktabah Al-Hidayah": "NA",
     "Ismaeel Books": "UK",
     "Al-Badr": "UK",
-    "Al-Balagh": "US",
+    "Al-Balagh": "NA",
     "Al-Kunuz": "UK",
     "Qurtuba": "UK",
     "Sifatu Safwa": "UK",
     "Zakariyya Books": "UK",
     "Salafi Books": "UK",
-    "UmmahSpot": "US",
+    "UmmahSpot": "NA",
     "Al-Hidayaah": "UK",
     "Buraq Books": "UK",
     "Kastntinya": "TUR",
-    "Maktabah Abu Hanifah": "UK"
+    "Maktabah Abu Hanifah": "UK",
+    "Irfan Books": "NA",
+    "JQU Bookstore": "NA",
 }
 
 export { storeCountries };
