@@ -114,7 +114,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
   const author = url.searchParams.get('author')?.trim() || '';
   const page = parseInt(url.searchParams.get('page') || '1');
   const show = parseInt(url.searchParams.get('show') || '15');
-  const sort = url.searchParams.get('sort') || 'low';
+  const sort = url.searchParams.get('sort') || 'rel';
   const instock = url.searchParams.get('instock') !== 'false';
   const searchDesc = url.searchParams.get('searchDesc') !== 'false';
   const exclude = url.searchParams.getAll('exclude');
