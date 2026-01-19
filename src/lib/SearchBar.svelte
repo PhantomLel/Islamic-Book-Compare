@@ -298,9 +298,9 @@
                     bind:value={country}
                     items={[
                         { value: "all", name: "All" },
-                        { value: "UK", name: "UK" },
-                        { value: "US", name: "US" },
-                        { value: "TUR", name: "TUR" },
+                        { value: "UK", name: "United Kingdom" },
+                        { value: "NA", name: "North America" },
+                        { value: "TUR", name: "Turkey" },
                     ]}
                 />
             </div>
