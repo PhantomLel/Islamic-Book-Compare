@@ -33,13 +33,13 @@ const sanatizeSearch = (search: string) => {
   return search.replace(/أ/g, 'ا')
     .replace(/إ/g, 'ا')
     .replace(/آ/g, 'ا')
-    .replace(/ؤ/g, 'و')
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
-    .replace(/ال/g, '')
+    .replace(/ؤ/g, 'و') // waw with hamza above
+    .replace(/\bال/g, '') // remove ال when at the beginning of a word only
+    .replace(/ئ/g, 'ي')
+    .replace(/ٱ/g, 'ا')
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // remove harkaat
     .trim()
     .toLowerCase();
-
-
 }
 
 let stores: string[] = [];
