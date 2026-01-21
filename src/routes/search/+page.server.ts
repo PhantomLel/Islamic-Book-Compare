@@ -34,7 +34,7 @@ const sanatizeSearch = (search: string) => {
     .replace(/إ/g, 'ا')
     .replace(/آ/g, 'ا')
     .replace(/ؤ/g, 'و') // waw with hamza above
-    .replace(/\bال/g, '') // remove ال when at the beginning of a word only
+    .replace(/(^|\s)ال/g, '$1') // remove ال only at beginning of words
     .replace(/ئ/g, 'ي')
     .replace(/ٱ/g, 'ا')
     .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // remove harkaat
@@ -124,6 +124,7 @@ export const load: PageServerLoad = async ({ url, request }) => {
 
   const queries: any[] = [];
   const sanatizedSearch = sanatizeSearch(search);
+  console.log(sanatizedSearch);
   const sanatizedAuthor = sanatizeSearch(author);
 
   if (sanatizedSearch && sanatizedAuthor) {
