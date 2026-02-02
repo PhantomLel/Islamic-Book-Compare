@@ -2,6 +2,7 @@
     import FloatingLabelInput from "flowbite-svelte/FloatingLabelInput.svelte";
     import Button from "flowbite-svelte/Button.svelte";
     import Select from "flowbite-svelte/Select.svelte";
+    import MultiSelect from "flowbite-svelte/MultiSelect.svelte";
     import Checkbox from "flowbite-svelte/Checkbox.svelte";
     import FilterOutline from "flowbite-svelte-icons/FilterOutline.svelte";
     import BookOutline from "flowbite-svelte-icons/BookOutline.svelte";
@@ -39,10 +40,23 @@
     let sortByValue = mode === "full" ? ($page.url.searchParams.get("sort") || "rel") : "rel";
     let instock = mode === "full" ? ($page.url.searchParams.get("instock") !== "false") : true;
     let exactSearch = mode === "full" ? ($page.url.searchParams.get("exactSearch") === "true") : false;
-    let country = mode === "full" ? ($page.url.searchParams.get("country") || "all") : "all";
+    // Parse countries from URL - supports comma-separated values
+    let selectedCountries: string[] = mode === "full" 
+        ? ($page.url.searchParams.get("countries")?.split(",").filter(c => c) || []) 
+        : [];
 
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
+
+    // Reactively sync state with URL params (handles browser back/forward navigation)
+    $: if (mode === "full") {
+        search = $page.url.searchParams.get("search") || "";
+        author = $page.url.searchParams.get("author") || "";
+        sortByValue = $page.url.searchParams.get("sort") || "rel";
+        instock = $page.url.searchParams.get("instock") !== "false";
+        exactSearch = $page.url.searchParams.get("exactSearch") === "true";
+        selectedCountries = $page.url.searchParams.get("countries")?.split(",").filter(c => c) || [];
+    }
 
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
@@ -76,10 +90,10 @@
         // Remove any existing country-based excludes first
         query.delete("exclude");
         
-        if (country !== "all") {
-            // Get all stores that don't match the selected country and exclude them
+        if (selectedCountries.length > 0) {
+            // Get all stores that don't match any of the selected countries and exclude them
             const storesToExclude = Object.entries(storeCountries)
-                .filter(([_, storeCountry]) => storeCountry !== country)
+                .filter(([_, storeCountry]) => !selectedCountries.includes(storeCountry))
                 .map(([storeName, _]) => storeName);
             
             storesToExclude.forEach((store) => {
@@ -87,11 +101,11 @@
             });
         }
         
-        // Update the country param in URL
-        if (country === "all") {
-            query.delete("country");
+        // Update the countries param in URL (comma-separated)
+        if (selectedCountries.length === 0) {
+            query.delete("countries");
         } else {
-            query.set("country", country);
+            query.set("countries", selectedCountries.join(","));
         }
         
         query.set("page", "1");
@@ -290,14 +304,13 @@
                 />
             </div>
             <div>
-                <Select 
+                <MultiSelect 
                     on:change={handleCountryChange}
                     class="mt-3 self-start"
                     size="md"
-                    placeholder="Country"
-                    bind:value={country}
+                    placeholder="Countries"
+                    bind:value={selectedCountries}
                     items={[
-                        { value: "all", name: "All" },
                         { value: "UK", name: "United Kingdom" },
                         { value: "NA", name: "North America" },
                         { value: "TUR", name: "Turkey" },
