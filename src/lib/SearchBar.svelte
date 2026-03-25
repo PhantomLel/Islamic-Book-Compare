@@ -48,16 +48,6 @@
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
 
-    // Reactively sync state with URL params (handles browser back/forward navigation)
-    $: if (mode === "full") {
-        search = $page.url.searchParams.get("search") || "";
-        author = $page.url.searchParams.get("author") || "";
-        sortByValue = $page.url.searchParams.get("sort") || "rel";
-        instock = $page.url.searchParams.get("instock") !== "false";
-        exactSearch = $page.url.searchParams.get("exactSearch") === "true";
-        selectedCountries = $page.url.searchParams.get("countries")?.split(",").filter(c => c) || [];
-    }
-
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
         { value: "GBP", name: "GBP", rate: 0.75, symbol: "£" },
