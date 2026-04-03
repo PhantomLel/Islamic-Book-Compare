@@ -5,6 +5,9 @@
     import Button from "flowbite-svelte/Button.svelte";
     import BookmarkOutline from "flowbite-svelte-icons/BookmarkOutline.svelte";
     import BookmarkSolid from "flowbite-svelte-icons/BookmarkSolid.svelte";
+    import UserOutline from "flowbite-svelte-icons/UserOutline.svelte";
+    import BuildingOutline from "flowbite-svelte-icons/BuildingOutline.svelte";
+    import StoreOutline from "flowbite-svelte-icons/StoreOutline.svelte";
     import { collectionsStore } from "$lib/stores";
     import CollectionsModal from "./CollectionsModal.svelte";
 
@@ -70,16 +73,20 @@
                 {book.title.substring(0, 70) +
                     (book.title.length > 70 ? "..." : "")}
             </h1>
-            <p class="sm:text-md text-sm text-slate-300">
-                {book.author == null ? "" : book.author.substring(0, 40)}
-            </p>
-            <p
-                class="sm:text-md
-                    text-sm text-slate-500 font-semibold"
-            >
-                {book.publisher == null ? "" : book.publisher}
-            </p>
-            <p class="sm:text-sm text-sm mt-2 text-slate-500 font-semibold">
+            {#if book.author}
+                <p class="sm:text-md text-sm text-slate-300 flex items-center gap-1.5 mt-1">
+                    <UserOutline class="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    {book.author.substring(0, 40)}
+                </p>
+            {/if}
+            {#if book.publisher}
+                <p class="sm:text-md text-sm text-slate-400 flex items-center gap-1.5 mt-1">
+                    <BuildingOutline class="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                    {book.publisher}
+                </p>
+            {/if}
+            <p class="sm:text-sm text-sm mt-2 text-slate-500 font-semibold flex items-center gap-1.5">
+                <StoreOutline class="h-3.5 w-3.5 text-slate-500 shrink-0" />
                 {book.source}
             </p>
             <p
