@@ -8,6 +8,7 @@
     import BookOutline from "flowbite-svelte-icons/BookOutline.svelte";
     import ArrowRightOutline from "flowbite-svelte-icons/ArrowRightOutline.svelte";
     import CoffeeIcon from "../routes/search/CoffeeIcon.svelte";
+    import SearchableStoreMultiSelect from "$lib/SearchableStoreMultiSelect.svelte";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
     import { createEventDispatcher } from "svelte";
@@ -32,6 +33,9 @@
     /** Current currency value */
     export let currency: string = "USD";
 
+    /** Store names from the server (search page) */
+    export let stores: string[] = [];
+
     const dispatch = createEventDispatcher();
 
     // State variables
@@ -47,6 +51,36 @@
 
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
+
+    $: storeSelectItems = stores.map((store) => ({
+        value: store,
+        name: store,
+        country: storeCountries[store] || "N/A",
+    }));
+
+    // Derived solely from the URL so back/forward navigation stays in sync.
+    $: selectedStores = (() => {
+        const excluded = new Set($page.url.searchParams.getAll("exclude"));
+        return stores.filter((s) => !excluded.has(s));
+    })();
+
+    function handleStoreChange(event: CustomEvent<string[]>) {
+        if (mode !== "full") return;
+
+        const newSelected = event.detail;
+
+        let query = new URLSearchParams($page.url.searchParams.toString());
+        query.delete("exclude");
+
+        const excluded = stores.filter((s) => !newSelected.includes(s));
+        excluded.forEach((store) => query.append("exclude", store));
+
+        query.set("page", "1");
+
+        goto(`?${query.toString()}`, {
+            keepFocus: true,
+        });
+    }
 
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
@@ -248,7 +282,7 @@
                 <BookOutline class="h-4 w-4 mr-2" />
                 Lists
             </Button>
-            <Button
+            <!-- <Button
                 on:click={handleFiltersClick}
                 outline={false}
                 class="mt-3 relative px-3"
@@ -265,7 +299,7 @@
                         ></span>
                     </span>
                 {/if}
-            </Button>
+            </Button> -->
             <div>
                 <Select
                     on:change={() => updateSearch()}
@@ -305,6 +339,16 @@
                         { value: "NA", name: "North America" },
                         { value: "TUR", name: "Turkey" },
                     ]}
+                />
+            </div>
+            <div class="min-w-[min(100%,14rem)] flex-1 sm:flex-none max-w-full">
+                <SearchableStoreMultiSelect
+                    items={storeSelectItems}
+                    value={selectedStores}
+                    on:change={handleStoreChange}
+                    class="mt-3 self-start w-full"
+                    size="md"
+                    placeholder="Stores"
                 />
             </div>
             <div class="flex flex-col gap-3">

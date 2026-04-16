@@ -142,6 +142,7 @@
         initialSearch={search}
         initialAuthor={author}
         {hasAnyActiveFilter}
+        stores={data.stores}
         bind:currency
         on:toggleFilters={handleToggleFilters}
         on:loading={handleLoading}
@@ -253,7 +254,7 @@
 </div>
 
 <!-- Include the FilterDrawer component and bind its hidden state -->
-<FilterDrawer bind:hidden={filtersHidden} bind:stores={data.stores} bind:show />
+<FilterDrawer bind:hidden={filtersHidden} bind:show />
 
 <Modal title="More Info" bind:open={clickOutsideModal} outsideclose>
     <div class="space-y-6">
