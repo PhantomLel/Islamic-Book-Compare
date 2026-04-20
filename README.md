@@ -54,6 +54,36 @@ npm run dev
 
 The application will be available at `http://localhost:5173`
 
+### Semantic (hybrid) search setup
+
+Search uses Atlas Vector Search fused with the existing keyword autocomplete via Reciprocal Rank Fusion. To enable it:
+
+1. Add your Voyage API key to `.env`:
+   ```
+   VOYAGE_API_KEY=pa-...
+   VOYAGE_MODEL=voyage-4-large    # optional; defaults to voyage-4-large (1024-dim)
+   SEARCH_TYPE=hybrid             # 'hybrid' | 'vector' | 'keyword' (A/B testing)
+   ```
+   The same key is also used by `book-scraper` at ingest time. If the key is missing, search transparently falls back to keyword-only. `SEARCH_TYPE` lets you flip between the three search backends at deploy-time without code changes.
+
+2. Create an Atlas Vector Search index named `vector_index` on the `books` collection:
+   ```json
+   {
+     "fields": [
+       { "type": "vector", "path": "embedding", "numDimensions": 1024, "similarity": "cosine" },
+       { "type": "filter", "path": "source" },
+       { "type": "filter", "path": "instock" }
+     ]
+   }
+   ```
+
+3. Run a one-off backfill from `book-scraper` to embed existing books:
+   ```bash
+   cd ../book-scraper
+   python backfill_embeddings.py
+   ```
+   Subsequent scraper runs embed new/changed books automatically (cached per title+author, so re-crawls are effectively free).
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
