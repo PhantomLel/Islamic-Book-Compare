@@ -12,7 +12,7 @@
 
 <div
     class="h-screen relative"
-    style="background-image: url(https://cdn.modrinth.com/landing-new/landing.webp); background-size: cover; padding-bottom: 10rem;"
+    style="background-image: url('/landing.webp'); background-size: cover; padding-bottom: 10rem;"
 >
     <div class="flex justify-center items-center h-screen">
         <div class="text-center w-full">

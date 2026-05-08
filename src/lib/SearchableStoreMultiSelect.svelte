@@ -56,10 +56,10 @@
     };
 
     const multiSelectClass =
-        "relative border border-gray-300 flex items-center rounded-lg gap-2 dark:border-gray-600 ring-primary-500 dark:ring-primary-500 focus-visible:outline-none";
+        "relative min-w-0 border border-gray-300 flex items-center rounded-lg gap-2 dark:border-gray-600 ring-primary-500 dark:ring-primary-500 focus-visible:outline-none";
 
     $: multiSelectDropdown = twMerge(
-        "absolute z-50 p-3 flex flex-col gap-1 max-h-72 bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600 start-0 top-[calc(100%+1rem)] rounded-lg cursor-pointer overflow-y-auto w-full min-w-[min(100vw-2rem,22rem)]",
+        "absolute z-50 p-3 flex flex-col gap-1 max-h-72 bg-white border border-gray-300 dark:bg-gray-700 dark:border-gray-600 start-0 top-[calc(100%+1rem)] rounded-lg cursor-pointer overflow-y-auto w-full max-w-[min(100%,calc(100vw-2rem))] box-border",
     );
 
     const itemsClass =
@@ -166,29 +166,33 @@
     {#if show}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <div on:click|stopPropagation role="presentation" class={multiSelectDropdown}>
-            <div class="flex gap-2 mb-2 sticky top-0 bg-white dark:bg-gray-700 pb-2 z-10">
+            <div
+                class="flex flex-wrap gap-2 mb-2 sticky top-0 bg-white dark:bg-gray-700 pb-2 z-10 items-center"
+            >
                 <Input
                     type="text"
                     size="sm"
-                    class="flex-1"
+                    class="min-w-0 flex-1 basis-[min(100%,12rem)] sm:basis-0"
                     placeholder="Search stores…"
                     bind:value={search}
                     autocomplete="off"
                 />
-                <button
-                    type="button"
-                    class="text-xs text-primary-600 dark:text-primary-400 whitespace-nowrap px-1"
-                    on:click|stopPropagation={selectAll}
-                >
-                    All
-                </button>
-                <button
-                    type="button"
-                    class="text-xs text-primary-600 dark:text-primary-400 whitespace-nowrap px-1"
-                    on:click|stopPropagation={selectNone}
-                >
-                    None
-                </button>
+                <div class="flex gap-2 shrink-0 ms-auto sm:ms-0">
+                    <button
+                        type="button"
+                        class="text-xs text-primary-600 dark:text-primary-400 whitespace-nowrap px-1 py-1 -my-1 touch-manipulation"
+                        on:click|stopPropagation={selectAll}
+                    >
+                        All
+                    </button>
+                    <button
+                        type="button"
+                        class="text-xs text-primary-600 dark:text-primary-400 whitespace-nowrap px-1 py-1 -my-1 touch-manipulation"
+                        on:click|stopPropagation={selectNone}
+                    >
+                        None
+                    </button>
+                </div>
             </div>
             {#each visibleItems as item (item.value)}
                 <!-- svelte-ignore a11y-click-events-have-key-events -->

@@ -341,7 +341,7 @@
                     ]}
                 />
             </div>
-            <div class="min-w-[min(100%,14rem)] flex-1 sm:flex-none max-w-full">
+            <div class="w-full min-w-0 sm:min-w-[14rem] sm:w-auto sm:flex-none sm:max-w-full">
                 <SearchableStoreMultiSelect
                     items={storeSelectItems}
                     value={selectedStores}

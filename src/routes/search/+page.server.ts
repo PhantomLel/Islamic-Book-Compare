@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import getDb from '$lib/server/db';
 import sendMessage from '$lib/server/telegram';
 import { embedQuery } from '$lib/server/embed';
-export const ssr = false;
+export const ssr = true;
 
 // Hybrid search tuning. K is the RRF constant (60 is the canonical default);
 // CANDIDATE_LIMIT is the per-side candidate pool we fuse over.
