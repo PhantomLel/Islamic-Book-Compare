@@ -9,6 +9,7 @@
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
     import type { PageData } from "./$types";
+    import type { Book } from "$lib";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
     import Pagination from "./Pagination.svelte";
@@ -54,7 +55,17 @@
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
 
-    let pageNum: number;
+    const placeholderBook: Book = {
+        id: 0,
+        title: "",
+        author: "",
+        publisher: "",
+        image: "",
+        price: 0,
+        url: "",
+        source: "",
+        instock: true,
+    };
 
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
@@ -66,13 +77,11 @@
 
     let currency = $page.url.hash.split("#")[1] || "USD";
 
-    $: {
-        pageNum = parseInt($page.url.searchParams.get("page") ?? "1");
-
-        if (pageNum < 1 || pageNum > Math.ceil(data.props.total / show)) {
-            pageNum = Math.ceil(data.props.total / show);
-            $page.url.searchParams.set("page", pageNum.toString());
-        }
+    function clampPageNum(total: number): number {
+        const maxPage = Math.max(1, Math.ceil(total / show));
+        const current = parseInt($page.url.searchParams.get("page") ?? "1");
+        if (current < 1 || current > maxPage) return maxPage;
+        return current;
     }
 
     afterNavigate(() => {
@@ -148,97 +157,114 @@
         on:loading={handleLoading}
     />
 
-    <div class="flex justify-center">
-        {#if data.props.results.length === 0}
-            <div
-                class="flex flex-col items-center justify-center min-h-[400px] px-4"
-            >
-                {#if loading}
-                    <div class="flex flex-col items-center">
-                        <Spinner color="purple" class="h-24 w-24 mb-4" />
-                        <p class="text-lg text-gray-300">
-                            Searching for books...
-                        </p>
-                    </div>
-                {:else}
-                    <div class="max-w-lg w-full">
-                        <!-- Main Alert Card -->
-                        <div
-                            class="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl p-8 border dark:border-slate-800 shadow-lg"
-                        >
-                            <div class="text-center">
-                                <!-- Icon -->
-                                <div
-                                    class="mx-auto w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-6"
-                                >
-                                    <SearchOutline
-                                        class="w-8 h-8 text-indigo-600 dark:text-indigo-400"
-                                    />
+    {#await data.props}
+        <div class="flex flex-wrap justify-center">
+            {#each Array.from({ length: show }) as _, i (i)}
+                <BookCard
+                    book={placeholderBook}
+                    loading={true}
+                    currency={currencies.find((c) => c.value === currency)}
+                />
+            {/each}
+        </div>
+    {:then props}
+        <div class="flex justify-center">
+            {#if props.results.length === 0}
+                <div
+                    class="flex flex-col items-center justify-center min-h-[400px] px-4"
+                >
+                    {#if loading}
+                        <div class="flex flex-wrap justify-center w-full">
+                            {#each Array.from({ length: show }) as _, i (i)}
+                                <BookCard
+                                    book={placeholderBook}
+                                    loading={true}
+                                    currency={currencies.find((c) => c.value === currency)}
+                                />
+                            {/each}
+                        </div>
+                    {:else}
+                        <div class="max-w-lg w-full">
+                            <div
+                                class="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl p-8 border dark:border-slate-800 shadow-lg"
+                            >
+                                <div class="text-center">
+                                    <div
+                                        class="mx-auto w-16 h-16 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-6"
+                                    >
+                                        <SearchOutline
+                                            class="w-8 h-8 text-indigo-600 dark:text-indigo-400"
+                                        />
+                                    </div>
+
+                                    <h3
+                                        class="text-2xl font-bold text-gray-900 dark:text-white mb-3"
+                                    >
+                                        No Books Found
+                                    </h3>
+
+                                    <p
+                                        class="text-gray-600 dark:text-gray-300 text-lg mb-8 leading-relaxed"
+                                    >
+                                        We couldn't find any books matching your
+                                        search criteria. Try adjusting your search
+                                        terms or filters.
+                                    </p>
+
+                                    <Button
+                                        on:click={() => (clickOutsideModal = true)}
+                                        size="lg"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                                    >
+                                        <InfoCircleOutline class="w-5 h-5 mr-2" />
+                                        Get Help & Tips
+                                    </Button>
                                 </div>
-
-                                <!-- Title -->
-                                <h3
-                                    class="text-2xl font-bold text-gray-900 dark:text-white mb-3"
-                                >
-                                    No Books Found
-                                </h3>
-
-                                <!-- Description -->
-                                <p
-                                    class="text-gray-600 dark:text-gray-300 text-lg mb-8 leading-relaxed"
-                                >
-                                    We couldn't find any books matching your
-                                    search criteria. Try adjusting your search
-                                    terms or filters.
-                                </p>
-
-                                <!-- Help Button -->
-                                <Button
-                                    on:click={() => (clickOutsideModal = true)}
-                                    size="lg"
-                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-                                >
-                                    <InfoCircleOutline class="w-5 h-5 mr-2" />
-                                    Get Help & Tips
-                                </Button>
                             </div>
                         </div>
-                    </div>
+                    {/if}
+                </div>
+            {:else}
+                <Pagination
+                    pageNum={clampPageNum(props.total)}
+                    helper={{
+                        start: props.start,
+                        end: props.end,
+                        total: props.total,
+                    }}
+                />
+            {/if}
+        </div>
+        <div class="flex flex-wrap justify-center">
+            {#each props.results as book}
+                {#if (instock && book.instock) || !instock}
+                    <BookCard
+                        {book}
+                        {loading}
+                        currency={currencies.find((c) => c.value === currency)}
+                    />
                 {/if}
-            </div>
-        {:else}
+            {/each}
+        </div>
+        {#if (props.results.length > 1 || innerWidth < 768) && !loading}
             <Pagination
-                {pageNum}
+                pageNum={clampPageNum(props.total)}
                 helper={{
-                    start: data.props.start,
-                    end: data.props.end,
-                    total: data.props.total,
+                    start: props.start,
+                    end: props.end,
+                    total: props.total,
                 }}
             />
         {/if}
-    </div>
-    <!-- Render a BookCard for each result -->
-    <div class="flex flex-wrap justify-center">
-        {#each data.props.results as book}
-            {#if (instock && book.instock) || !instock}
-                <BookCard
-                    {book}
-                    {loading}
-                    currency={currencies.find((c) => c.value === currency)}
-                />
-            {/if}
-        {/each}
-    </div>
-    {#if (data.props.results.length > 1 || innerWidth < 768) && !loading}
-        <Pagination
-            {pageNum}
-            helper={{
-                start: data.props.start,
-                end: data.props.end,
-                total: data.props.total,
-            }}
-        />
-    {/if}
+    {:catch}
+        <div
+            class="flex flex-col items-center justify-center min-h-[400px] px-4"
+        >
+            <p class="text-lg text-gray-300">
+                Something went wrong while searching. Please try again.
+            </p>
+        </div>
+    {/await}
 </div>
 
 <!-- Sticky Info Button -->

@@ -186,7 +186,7 @@
             goto(`?${query.toString()}`, {
                 keepFocus: true,
             });
-        }, 700);
+        }, 1100);
     }
 
     function handleFiltersClick() {

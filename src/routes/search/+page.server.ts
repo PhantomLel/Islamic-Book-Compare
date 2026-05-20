@@ -8,7 +8,7 @@ export const ssr = true;
 // CANDIDATE_LIMIT is the per-side candidate pool we fuse over.
 const RRF_K = 60;
 const CANDIDATE_LIMIT = 100;
-const VECTOR_NUM_CANDIDATES = 400;
+const VECTOR_NUM_CANDIDATES = 200;
 const VECTOR_INDEX_NAME = 'vector_index';
 
 // Which search backend to use. Set via env so you can flip between modes at
@@ -301,14 +301,18 @@ async function runFusedSearch(opts: {
     ? booksCol
         .aggregate([
           keywordSearchStage,
-          ...postFilterStages,
-          { $limit: CANDIDATE_LIMIT },
+          // Project early so postFilter $match stages and $limit don't carry
+          // 8KB/doc embeddings through the pipeline.
           {
             $project: {
               ...candidateProjection,
+              instock: 1,
               score: { $meta: 'searchScore' },
             },
           },
+          ...postFilterStages,
+          { $limit: CANDIDATE_LIMIT },
+          { $project: { instock: 0 } },
         ])
         .toArray()
     : Promise.resolve([]);
@@ -392,8 +396,14 @@ async function runFusedSearch(opts: {
   let books: any[] = [];
   if (pageSlice.length > 0) {
     const urls = pageSlice.map((f) => f.cand.url);
+    // CRITICAL: explicitly drop `embedding` (1024-dim doubles, ~8KB/doc).
+    // Without this, every page render ships ~120KB of float arrays to Node
+    // and then to the client, which dominated hybrid-search latency.
     const fullDocs = await booksCol
-      .find({ url: { $in: urls } }, { projection: { _id: 0 } })
+      .find(
+        { url: { $in: urls } },
+        { projection: { _id: 0, embedding: 0, embeddingModel: 0 } }
+      )
       .toArray();
     const byUrl = new Map<string, any>(fullDocs.map((d: any) => [d.url, d]));
     books = pageSlice
@@ -417,32 +427,23 @@ async function runFusedSearch(opts: {
   };
 }
 
-export const load: PageServerLoad = async ({ url, request }) => {
-
+async function loadSearchProps({ url, request }: { url: URL; request: Request }) {
   const db = await getDb();
 
-  // Fetch the list of stores
-  const stores = await get_stores();
-
-  // Extract query parameters from the URL
   const search = url.searchParams.get('search')?.trim() || '';
   const author = url.searchParams.get('author')?.trim() || '';
   const page = parseInt(url.searchParams.get('page') || '1');
   const show = parseInt(url.searchParams.get('show') || '15');
   const sort = url.searchParams.get('sort') || 'rel';
   const instock = url.searchParams.get('instock') !== 'false';
-  const searchDesc = url.searchParams.get('searchDesc') !== 'false';
   const exclude = url.searchParams.getAll('exclude');
   const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
   const exactSearch = url.searchParams.get('exactSearch') === 'true';
-
 
   const sanatizedSearch = sanatizeSearch(search);
   console.log(sanatizedSearch);
   const sanatizedAuthor = sanatizeSearch(author);
 
-  // Build the keyword ($search) stage the same way the legacy path did; we
-  // reuse it both for hybrid mode and for the fallback when embeddings fail.
   const keywordSearchStage = buildKeywordSearchStage(
     sanatizedSearch,
     sanatizedAuthor,
@@ -450,8 +451,6 @@ export const load: PageServerLoad = async ({ url, request }) => {
     exactSearch
   );
 
-  // Common post-search filters (instock + excluded stores). Vector search has
-  // to apply these *inside* its own stage; keyword search can apply them after.
   const postFilterStages: any[] = [];
   if (instock) postFilterStages.push({ $match: { instock: true } });
   if (exclude.length > 0) {
@@ -460,12 +459,6 @@ export const load: PageServerLoad = async ({ url, request }) => {
 
   const booksCol = db.collection('books');
 
-  // Which backend we'd actually like to run. Semantic modes only kick in when:
-  //   - we have at least one search term,
-  //   - user didn't request exactSearch (that's a regex grep; embeddings are
-  //     pointless there),
-  //   - and SEARCH_TYPE isn't set to 'keyword'.
-  // A failed embed call still falls back to the legacy keyword aggregation.
   const hasQuery = !!sanatizedSearch || !!sanatizedAuthor;
   const wantSemantic = !exactSearch && hasQuery && SEARCH_TYPE !== 'keyword';
   const queryText = sanatizedSearch && sanatizedAuthor
@@ -489,7 +482,6 @@ export const load: PageServerLoad = async ({ url, request }) => {
         sort,
         page,
         show,
-        // SEARCH_TYPE is 'hybrid' or 'vector' here (we excluded 'keyword' above).
         mode: SEARCH_TYPE === 'vector' ? 'vector' : 'hybrid',
       })
     : null;
@@ -499,26 +491,26 @@ export const load: PageServerLoad = async ({ url, request }) => {
     books = semanticResult.books;
     allPublishers = semanticResult.allPublishers;
   } else {
-    // Legacy path: pure keyword / regex aggregation. Runs for exactSearch,
-    // author-less+search-less browsing, or as a graceful fallback when the
-    // embedding API is unavailable.
     const queries: any[] = [];
     if (keywordSearchStage) queries.push(keywordSearchStage);
     queries.push(...postFilterStages);
     queries.push({ $addFields: { score: { $meta: 'searchScore' } } });
+    // Drop the embedding field BEFORE $facet so neither branch carries 8KB/doc
+    // of float arrays through the pipeline.
+    queries.push({ $project: { embedding: 0, embeddingModel: 0 } });
     queries.push({
       $facet: {
         count: [{ $count: 'totalCount' }],
         documents: [
-          { $skip: (page - 1) * show },
-          { $limit: show },
-          { $project: { _id: 0 } },
           {
             $sort:
               sort === 'rel'
                 ? { score: -1 }
                 : { price: sort === 'low' ? 1 : -1 },
           },
+          { $skip: (page - 1) * show },
+          { $limit: show },
+          { $project: { _id: 0 } },
         ],
         allPublishers: [
           { $match: { publisher: { $exists: true, $nin: [null, ''] } } },
@@ -540,14 +532,23 @@ export const load: PageServerLoad = async ({ url, request }) => {
   await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
 
   return {
-    props: {
-      results: books,
-      total,
-      start: (page - 1) * show + 1,
-      end: Math.min(page * show, total),
-      allPublishers,
-    },
+    results: books,
+    total,
+    start: (page - 1) * show + 1,
+    end: Math.min(page * show, total),
+    allPublishers,
+  };
+}
+
+export const load: PageServerLoad = async ({ url, request }) => {
+  const stores = await get_stores();
+
+  // Stream search results so the page shell renders immediately (e.g. after
+  // submitting from the homepage) instead of blocking navigation until MongoDB
+  // and embedding calls finish.
+  return {
     stores,
+    props: loadSearchProps({ url, request }),
   };
 };
 
