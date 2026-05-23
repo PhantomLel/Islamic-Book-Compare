@@ -44,6 +44,7 @@ const storeCountries: Record<string, string> = {
     "Kunuz" : "UK",
     "Osman Books" : "UK",
     "Tahsil Yayinevi" : "TUR",
+    "Anadolu Kitabevi" : "TUR",
 }
 
 export { storeCountries };
