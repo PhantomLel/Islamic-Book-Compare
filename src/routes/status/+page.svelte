@@ -25,6 +25,9 @@
             <p class="text-sm mt-2">Error: <span class={value.error ? 'text-red-500 font-bold' : 'text-green-500 font-bold'}>{value.error}</span></p>
             <p class="text-sm mt-2">Last updated: <span class="">{timeSince(value.last_crawled)} ago</span></p>
             <p class="text-sm mt-2">Total books: <span class="">{value.total_books}</span></p>
+            {#if value.new_books !== undefined}
+                <p class="text-sm mt-2">New books (last run): <span class="">{value.new_books}</span></p>
+            {/if}
         </div>
     {/each}
 
