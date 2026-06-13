@@ -232,6 +232,7 @@
                         end: props.end,
                         total: props.total,
                     }}
+                    {show}
                 />
             {/if}
         </div>
@@ -254,6 +255,7 @@
                     end: props.end,
                     total: props.total,
                 }}
+                {show}
             />
         {/if}
     {:catch}
