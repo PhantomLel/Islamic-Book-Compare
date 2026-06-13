@@ -13,9 +13,27 @@ export type Book = {
     source: string;
     instock: boolean;
 }
+// A lightweight snapshot of a book saved into a collection. We persist enough
+// to always render the card, even if the book later disappears from the catalog
+// or the scraper changes its data. Live price/stock are refreshed by `url`,
+// which is the only identifier that is stable across re-crawls (the Mongo `_id`
+// is regenerated on every upload).
+export type SavedBook = {
+    url: string; // stable perma link / key
+    title?: string;
+    author?: string;
+    image?: string;
+    source?: string;
+    price?: number | null;
+    addedAt: number;
+}
+
 export type Collection = {
+    id: string; // stable id so collections can be renamed safely
     name: string;
-    books: string[]; // book perma links
+    books: SavedBook[];
+    createdAt: number;
+    updatedAt: number;
 }
 
 

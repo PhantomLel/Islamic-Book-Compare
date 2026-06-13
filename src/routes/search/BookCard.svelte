@@ -18,7 +18,9 @@
     export let currency =  { value: "USD", name: "USD", rate: 1, symbol: "$"};
 
 
-    $: isBookmarked = $collectionsStore.some((collection) => collection.books.includes(book.url));
+    $: isBookmarked = $collectionsStore.some((collection) =>
+        collection.books.some((b) => b.url === book.url),
+    );
 
     const handleBookClick = (book: Book) => {
         fetch("/api/book-clicked", {
@@ -136,5 +138,5 @@
 {/if}
 
 {#if modalOpen}
-    <CollectionsModal bookUrl={book.url} bind:open={modalOpen} />
+    <CollectionsModal {book} bind:open={modalOpen} />
 {/if}
