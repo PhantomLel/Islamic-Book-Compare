@@ -498,6 +498,9 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
     // Drop the embedding field BEFORE $facet so neither branch carries 8KB/doc
     // of float arrays through the pipeline.
     queries.push({ $project: { embedding: 0, embeddingModel: 0 } });
+    // Cap candidates before $facet so count/allPublishers/documents don't scan
+    // every match (same pool size as hybrid search; total is approximate).
+    queries.push({ $limit: CANDIDATE_LIMIT });
     queries.push({
       $facet: {
         count: [{ $count: 'totalCount' }],
@@ -529,7 +532,7 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
         : [];
   }
 
-  await sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
+  sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
 
   return {
     results: books,

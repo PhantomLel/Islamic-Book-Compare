@@ -6,7 +6,8 @@ export const ssr = true;
 
 export const load: PageServerLoad = async () => {
   const db = await getDb();
-  const total = await db.collection('books').countDocuments({});
+  // Metadata-based count: O(1) vs countDocuments scanning ~66k docs on every landing load.
+  const total = await db.collection('books').estimatedDocumentCount();
   return { props: { total } };
 };
 
