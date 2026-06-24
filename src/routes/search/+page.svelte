@@ -30,10 +30,23 @@
     });
 
     let clickOutsideModal = false;
-    
-    // Initialize the search term from the provided data
-    let search = $page.url.searchParams.get("search") || "";
-    let author = $page.url.searchParams.get("author") || "";
+
+    $: search = $page.url.searchParams.get("search") || "";
+    $: author = $page.url.searchParams.get("author") || "";
+
+    let stores: string[] = [];
+    let storesRequestId = 0;
+
+    $: {
+        const requestId = ++storesRequestId;
+        data.stores
+            .then((s) => {
+                if (requestId === storesRequestId) stores = s;
+            })
+            .catch(() => {
+                if (requestId === storesRequestId) stores = [];
+            });
+    }
 
     // Check if filters are active (non-default values)
     $: hasActiveFilters = {
@@ -134,29 +147,14 @@
 </title>
 
 <div class="pb-12">
-    {#await data.stores then stores}
-        <SearchBar
-            mode="full"
-            initialSearch={search}
-            initialAuthor={author}
-            {hasAnyActiveFilter}
-            {stores}
-            bind:currency
-            on:toggleFilters={handleToggleFilters}
-            on:loading={handleLoading}
-        />
-    {:catch}
-        <SearchBar
-            mode="full"
-            initialSearch={search}
-            initialAuthor={author}
-            {hasAnyActiveFilter}
-            stores={[]}
-            bind:currency
-            on:toggleFilters={handleToggleFilters}
-            on:loading={handleLoading}
-        />
-    {/await}
+    <SearchBar
+        mode="full"
+        {hasAnyActiveFilter}
+        {stores}
+        bind:currency
+        on:toggleFilters={handleToggleFilters}
+        on:loading={handleLoading}
+    />
 
     {#await data.props}
         <SearchResultsSkeleton count={show} />

@@ -11,8 +11,8 @@
     import CoffeeIcon from "../routes/search/CoffeeIcon.svelte";
     import SearchableStoreMultiSelect from "$lib/SearchableStoreMultiSelect.svelte";
     import { page } from "$app/stores";
-    import { goto } from "$app/navigation";
-    import { createEventDispatcher } from "svelte";
+    import { afterNavigate, goto } from "$app/navigation";
+    import { createEventDispatcher, onDestroy } from "svelte";
     import { storeCountries } from "$lib";
 
     /**
@@ -39,20 +39,51 @@
 
     const dispatch = createEventDispatcher();
 
-    // State variables
-    let search = initialSearch;
-    let author = initialAuthor;
-    let sortByValue = mode === "full" ? ($page.url.searchParams.get("sort") || "rel") : "rel";
-    let instock = mode === "full" ? ($page.url.searchParams.get("instock") !== "false") : true;
-    let exactSearch = mode === "full" ? ($page.url.searchParams.get("exactSearch") === "true") : false;
-    // Parse countries from URL - supports comma-separated values
-    let selectedCountries: string[] = mode === "full" 
-        ? ($page.url.searchParams.get("countries")?.split(",").filter(c => c) || []) 
-        : [];
+    function readUrlState() {
+        return {
+            search: $page.url.searchParams.get("search") || "",
+            author: $page.url.searchParams.get("author") || "",
+            sort: $page.url.searchParams.get("sort") || "rel",
+            instock: $page.url.searchParams.get("instock") !== "false",
+            exactSearch: $page.url.searchParams.get("exactSearch") === "true",
+            countries:
+                $page.url.searchParams.get("countries")?.split(",").filter((c) => c) || [],
+        };
+    }
+
+    // Full mode reads from the URL so remounts and back/forward stay in sync.
+    const initial = mode === "full" ? readUrlState() : null;
+    let search = initial?.search ?? initialSearch;
+    let author = initial?.author ?? initialAuthor;
+    let sortByValue = initial?.sort ?? "rel";
+    let instock = initial?.instock ?? true;
+    let exactSearch = initial?.exactSearch ?? false;
+    let selectedCountries: string[] = initial?.countries ?? [];
 
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
     let submitting = false;
+
+    afterNavigate(({ to, type }) => {
+        if (mode !== "full" || !to) return;
+
+        loading = false;
+        dispatch("loading", false);
+
+        if (type === "popstate") {
+            search = to.url.searchParams.get("search") || "";
+            author = to.url.searchParams.get("author") || "";
+            sortByValue = to.url.searchParams.get("sort") || "rel";
+            instock = to.url.searchParams.get("instock") !== "false";
+            exactSearch = to.url.searchParams.get("exactSearch") === "true";
+            selectedCountries =
+                to.url.searchParams.get("countries")?.split(",").filter((c) => c) || [];
+        }
+    });
+
+    onDestroy(() => {
+        clearTimeout(timer);
+    });
 
     $: storeSelectItems = stores.map((store) => ({
         value: store,
@@ -190,6 +221,7 @@
 
             goto(`?${query.toString()}`, {
                 keepFocus: true,
+                replaceState: true,
             });
         }, 1100);
     }
