@@ -12,12 +12,19 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 		return new Response('Image URL not allowed', { status: 403 });
 	}
 
+	// Some hosts (e.g. Cloudflare-fronted WordPress stores) enforce hotlink
+	// protection and return 404 unless the request carries a same-origin
+	// Referer/Origin. Send the image's own origin so cold (uncached) fetches succeed.
+	const { origin } = new URL(imageUrl);
+
 	try {
 		const upstream = await fetch(imageUrl, {
 			headers: {
 				Accept: 'image/*,*/*;q=0.8',
 				'User-Agent':
 					'Mozilla/5.0 (compatible; IslamicBookSearch/1.0; +https://github.com/PhantomLel/Islamic-Book-Compare)',
+				Referer: `${origin}/`,
+				Origin: origin,
 			},
 			redirect: 'follow',
 		});
