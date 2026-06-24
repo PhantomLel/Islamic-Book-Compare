@@ -1,8 +1,15 @@
 <script lang="ts">
     import "../app.css";
     import ToastNotifications from "$lib/ToastNotifications.svelte";
+    import SearchResultsSkeleton from "$lib/SearchResultsSkeleton.svelte";
+    import { navigating } from "$app/stores";
 
     import { onMount, onDestroy } from "svelte";
+
+    $: searchNavigation =
+        $navigating !== null &&
+        $navigating.from?.url.pathname !== "/search" &&
+        $navigating.to?.url.pathname === "/search";
 
     const BOOK_EMOJIS = ["📖", "📚", "📕", "📗", "📘", "📙"];
     let confettiContainer: HTMLDivElement;
@@ -75,6 +82,13 @@
 
 <slot style=""></slot>
 <ToastNotifications />
+
+{#if searchNavigation}
+    <div class="search-navigation-overlay" aria-live="polite" aria-busy="true">
+        <p class="search-navigation-overlay__label">Searching…</p>
+        <SearchResultsSkeleton />
+    </div>
+{/if}
 
 <style>
     .support-banner {
@@ -160,5 +174,23 @@
     :global(.book-icon) {
         width: 0.9rem;
         height: 0.9rem;
+    }
+
+    .search-navigation-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        overflow-y: auto;
+        background: #111827;
+        padding: 1rem 0 3rem;
+    }
+
+    .search-navigation-overlay__label {
+        margin: 0 0 0.5rem;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.04em;
     }
 </style>

@@ -543,14 +543,11 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   };
 }
 
-export const load: PageServerLoad = async ({ url, request }) => {
-  const stores = await get_stores();
-
-  // Stream search results so the page shell renders immediately (e.g. after
-  // submitting from the homepage) instead of blocking navigation until MongoDB
-  // and embedding calls finish.
+export const load: PageServerLoad = ({ url, request }) => {
+  // Stream both promises so navigation can render the page shell (and loading
+  // skeletons) immediately instead of blocking until MongoDB/embed calls finish.
   return {
-    stores,
+    stores: get_stores(),
     props: loadSearchProps({ url, request }),
   };
 };

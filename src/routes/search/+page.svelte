@@ -9,7 +9,6 @@
     import SearchOutline from "flowbite-svelte-icons/SearchOutline.svelte";
     import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
     import type { PageData } from "./$types";
-    import type { Book } from "$lib";
     import BookCard from "./BookCard.svelte";
     import { page } from "$app/stores";
     import Pagination from "./Pagination.svelte";
@@ -19,6 +18,7 @@
     import GithubSolid from "flowbite-svelte-icons/GithubSolid.svelte";
     import CodeOutline from "flowbite-svelte-icons/CodeOutline.svelte";
     import SearchBar from "$lib/SearchBar.svelte";
+    import SearchResultsSkeleton from "$lib/SearchResultsSkeleton.svelte";
 
     // The data prop is provided by the parent component
     export let data: PageData;
@@ -54,18 +54,6 @@
     let filtersHidden = true;
 
     let show = parseInt($page.url.searchParams.get("show") ?? "15");
-
-    const placeholderBook: Book = {
-        id: 0,
-        title: "",
-        author: "",
-        publisher: "",
-        image: "",
-        price: 0,
-        url: "",
-        source: "",
-        instock: true,
-    };
 
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
@@ -146,27 +134,32 @@
 </title>
 
 <div class="pb-12">
-    <SearchBar
-        mode="full"
-        initialSearch={search}
-        initialAuthor={author}
-        {hasAnyActiveFilter}
-        stores={data.stores}
-        bind:currency
-        on:toggleFilters={handleToggleFilters}
-        on:loading={handleLoading}
-    />
+    {#await data.stores then stores}
+        <SearchBar
+            mode="full"
+            initialSearch={search}
+            initialAuthor={author}
+            {hasAnyActiveFilter}
+            {stores}
+            bind:currency
+            on:toggleFilters={handleToggleFilters}
+            on:loading={handleLoading}
+        />
+    {:catch}
+        <SearchBar
+            mode="full"
+            initialSearch={search}
+            initialAuthor={author}
+            {hasAnyActiveFilter}
+            stores={[]}
+            bind:currency
+            on:toggleFilters={handleToggleFilters}
+            on:loading={handleLoading}
+        />
+    {/await}
 
     {#await data.props}
-        <div class="flex flex-wrap justify-center">
-            {#each Array.from({ length: show }) as _, i (i)}
-                <BookCard
-                    book={placeholderBook}
-                    loading={true}
-                    currency={currencies.find((c) => c.value === currency)}
-                />
-            {/each}
-        </div>
+        <SearchResultsSkeleton count={show} />
     {:then props}
         <div class="flex justify-center">
             {#if props.results.length === 0}
@@ -174,15 +167,7 @@
                     class="flex flex-col items-center justify-center min-h-[400px] px-4"
                 >
                     {#if loading}
-                        <div class="flex flex-wrap justify-center w-full">
-                            {#each Array.from({ length: show }) as _, i (i)}
-                                <BookCard
-                                    book={placeholderBook}
-                                    loading={true}
-                                    currency={currencies.find((c) => c.value === currency)}
-                                />
-                            {/each}
-                        </div>
+                        <SearchResultsSkeleton count={show} />
                     {:else}
                         <div class="max-w-lg w-full">
                             <div

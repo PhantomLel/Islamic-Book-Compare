@@ -7,6 +7,7 @@
     import FilterOutline from "flowbite-svelte-icons/FilterOutline.svelte";
     import BookOutline from "flowbite-svelte-icons/BookOutline.svelte";
     import ArrowRightOutline from "flowbite-svelte-icons/ArrowRightOutline.svelte";
+    import Spinner from "flowbite-svelte/Spinner.svelte";
     import CoffeeIcon from "../routes/search/CoffeeIcon.svelte";
     import SearchableStoreMultiSelect from "$lib/SearchableStoreMultiSelect.svelte";
     import { page } from "$app/stores";
@@ -51,6 +52,7 @@
 
     let timer: ReturnType<typeof setTimeout>;
     let loading = false;
+    let submitting = false;
 
     $: storeSelectItems = stores.map((store) => ({
         value: store,
@@ -103,7 +105,10 @@
         if (trimmedSearch) query.set("search", trimmedSearch);
         if (trimmedAuthor) query.set("author", trimmedAuthor);
 
-        goto(`/search?${query.toString()}`);
+        submitting = true;
+        goto(`/search?${query.toString()}`).catch(() => {
+            submitting = false;
+        });
     }
 
     function handleCountryChange() {
@@ -230,9 +235,15 @@
                 type="submit"
                 class="px-6 h-[52px]  mx-auto sm:mx-0"
                 size="sm"
+                disabled={submitting}
             >
-                Search  
-                <ArrowRightOutline class="w-6 h-6 font-bold" />
+                {#if submitting}
+                    <Spinner size="4" class="mr-2" />
+                    Searching…
+                {:else}
+                    Search
+                    <ArrowRightOutline class="w-6 h-6 font-bold" />
+                {/if}
             </Button>
         </div>
     </form>
