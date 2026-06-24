@@ -1,21 +1,46 @@
 <script lang="ts">
     import type { Book } from "$lib";
     import TextPlaceholder from "flowbite-svelte/TextPlaceholder.svelte";
-    import ImagePlaceholder from "flowbite-svelte/ImagePlaceholder.svelte";
     import Button from "flowbite-svelte/Button.svelte";
     import BookmarkOutline from "flowbite-svelte-icons/BookmarkOutline.svelte";
     import BookmarkSolid from "flowbite-svelte-icons/BookmarkSolid.svelte";
     import UserOutline from "flowbite-svelte-icons/UserOutline.svelte";
     import BuildingOutline from "flowbite-svelte-icons/BuildingOutline.svelte";
     import StoreOutline from "flowbite-svelte-icons/StoreOutline.svelte";
+    import BookOpenOutline from "flowbite-svelte-icons/BookOpenOutline.svelte";
     import { collectionsStore } from "$lib/stores";
     import CollectionsModal from "./CollectionsModal.svelte";
+    import { displayImageUrl, proxiedImageUrl } from "$lib/image";
 
     let modalOpen = false;
     export let book: Book;
     export let loading = false;
     export let width = "sm:w-1/4 w-full";
     export let currency =  { value: "USD", name: "USD", rate: 1, symbol: "$"};
+
+    let useProxy = false;
+    let imageFailed = false;
+
+    $: if (book.image) {
+        useProxy = false;
+        imageFailed = false;
+    }
+
+    $: directImageSrc = displayImageUrl(book.image);
+    $: imageSrc =
+        directImageSrc && !imageFailed
+            ? useProxy
+                ? proxiedImageUrl(directImageSrc)
+                : directImageSrc
+            : null;
+
+    function handleImageError() {
+        if (!useProxy && directImageSrc) {
+            useProxy = true;
+            return;
+        }
+        imageFailed = true;
+    }
 
 
     $: isBookmarked = $collectionsStore.some((collection) =>
@@ -54,23 +79,31 @@
 
 {#if !loading}
     <div
-        class="bg-gray-800 p-6 m-5  rounded-xl {width} cursor-pointer relative flex flex-row gap-3"
+        class="bg-gray-800 p-6 m-5 rounded-xl {width} cursor-pointer relative flex flex-row gap-3 items-start"
         role="button"
         tabindex="0"
         on:click={() => handleBookClick(book)}
         on:keydown={(e) => e.key === "Enter" && handleBookClick(book)}
     >
-        {#if book.image != null}
-            <img
-                src={book.image}
-                alt="book"
-                class="object-scale-down w-32 mb-2"
-            />
-        {:else}
-            <ImagePlaceholder imgOnly={true} divClass="w-32" />
-        {/if}
+        <div class="cover-slot">
+            {#if imageSrc}
+                <img
+                    src={imageSrc}
+                    alt={book.title || "book cover"}
+                    class="cover-slot__image"
+                    referrerpolicy="no-referrer"
+                    loading="lazy"
+                    decoding="async"
+                    on:error={handleImageError}
+                />
+            {:else}
+                <div class="cover-slot__fallback" aria-hidden="true">
+                    <BookOpenOutline class="cover-slot__icon" />
+                </div>
+            {/if}
+        </div>
 
-        <div class=" w-1/2">
+        <div class="flex-1 min-w-0">
             <h1 class="text-sm font-bold text-white">
                 {book.title.substring(0, 70) +
                     (book.title.length > 70 ? "..." : "")}
@@ -129,9 +162,9 @@
         </Button> -->
     </div>
 {:else}
-    <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3">
-        <ImagePlaceholder imgOnly divClass="w-32" />
-        <div>
+    <div class="bg-gray-800 p-6 m-5 rounded-xl flex gap-3 items-start {width}">
+        <div class="cover-slot cover-slot--loading" aria-hidden="true"></div>
+        <div class="flex-1 min-w-0">
             <TextPlaceholder size="w-32 mt-6" />
         </div>
     </div>
@@ -140,3 +173,51 @@
 {#if modalOpen}
     <CollectionsModal {book} bind:open={modalOpen} />
 {/if}
+
+<style>
+    .cover-slot {
+        width: 8rem;
+        height: 11rem;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: 0.375rem;
+        background: rgb(55 65 81);
+    }
+
+    .cover-slot--loading {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .cover-slot__image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .cover-slot__fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: rgb(107 114 128);
+    }
+
+    :global(.cover-slot__icon) {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+
+    @keyframes pulse {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.55;
+        }
+    }
+</style>
