@@ -1,5 +1,5 @@
 /**
- * Query-side Voyage embedding client used by the hybrid search pipeline.
+ * Query-side Voyage embedding client used by vector search.
  *
  * Voyage embeddings are asymmetric: documents are embedded with
  * `input_type: "document"` at ingest time (see `book-scraper/voyage_embed.py`),
@@ -7,7 +7,7 @@
  * noticeably hurts recall, so this module only handles the query side.
  *
  * Returns null on any failure (missing key, timeout, 5xx) so the caller can
- * transparently fall back to keyword-only search without breaking search.
+ * fall back to regex matching without breaking search.
  */
 
 const VOYAGE_ENDPOINT = 'https://api.voyageai.com/v1/embeddings';

@@ -66,6 +66,7 @@ const storeCountries: Record<string, string> = {
     "Safinat Ul-Najat": "UK",
     "Islamic Bookstore": "NA",
     "Mecca Books": "NA",
+    "Turath Publishing": "UK",
 }
 
 export { storeCountries };

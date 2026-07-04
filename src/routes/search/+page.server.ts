@@ -4,27 +4,9 @@ import sendMessage from '$lib/server/telegram';
 import { embedQuery } from '$lib/server/embed';
 export const ssr = true;
 
-// Hybrid search tuning. K is the RRF constant (60 is the canonical default);
-// CANDIDATE_LIMIT is the per-side candidate pool we fuse over.
-const RRF_K = 60;
 const CANDIDATE_LIMIT = 100;
 const VECTOR_NUM_CANDIDATES = 200;
 const VECTOR_INDEX_NAME = 'vector_index';
-
-// Which search backend to use. Set via env so you can flip between modes at
-// deploy-time without code changes (useful for A/B-testing relevance).
-//   - 'hybrid'  : keyword + vector, fused with RRF (default, best quality)
-//   - 'vector'  : vector-only (pure semantic, catches paraphrases but can miss
-//                 exact-title typing)
-//   - 'keyword' : old $search autocomplete only (pre-embedding behavior)
-// exactSearch (regex) always overrides this; it's a distinct user-facing mode.
-type SearchMode = 'hybrid' | 'vector' | 'keyword';
-const SEARCH_TYPE: SearchMode = (() => {
-    const raw = (process.env.SEARCH_TYPE || 'hybrid').toLowerCase();
-    if (raw === 'vector' || raw === 'keyword' || raw === 'hybrid') return raw;
-    console.warn(`[search] unknown SEARCH_TYPE="${raw}", falling back to 'hybrid'`);
-    return 'hybrid';
-})();
 
 type Candidate = {
     url: string;
@@ -133,89 +115,31 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 
 }
 
-
-/**
- * Build the same `$search` stage we used in the pre-hybrid pipeline. Returned
- * as a standalone stage (or `null` when there's nothing to search on) so we can
- * reuse it from the hybrid path and from the legacy fallback.
- */
-function buildKeywordSearchStage(
+function buildRegexMatchStage(
   sanatizedSearch: string,
-  sanatizedAuthor: string,
-  fuzzySearch: boolean,
-  exactSearch: boolean
+  sanatizedAuthor: string
 ): any | null {
   if (sanatizedSearch && sanatizedAuthor) {
-    if (exactSearch) {
-      return {
-        $match: {
-          titleNormalized: { $regex: new RegExp(sanatizedSearch, 'i') },
-          authorNormalized: { $regex: new RegExp(sanatizedAuthor, 'i') },
-        },
-      };
-    }
     return {
-      $search: {
-        index: 'default',
-        compound: {
-          must: [
-            {
-              autocomplete: {
-                query: sanatizedAuthor,
-                path: 'authorNormalized',
-                fuzzy: fuzzySearch ? {} : undefined,
-              },
-            },
-            {
-              autocomplete: {
-                query: sanatizedSearch,
-                path: 'titleNormalized',
-                fuzzy: fuzzySearch ? {} : undefined,
-              },
-            },
-          ],
-        },
+      $match: {
+        titleNormalized: { $regex: sanatizedSearch, $options: 'i' },
+        authorNormalized: { $regex: sanatizedAuthor, $options: 'i' },
       },
     };
   }
   if (sanatizedSearch) {
-    if (exactSearch) {
-      return {
-        $match: { titleNormalized: { $regex: sanatizedSearch, $options: 'i' } },
-      };
-    }
     return {
-      $search: {
-        index: 'default',
-        autocomplete: {
-          query: sanatizedSearch,
-          path: 'titleNormalized',
-          fuzzy: fuzzySearch ? {} : undefined,
-        },
-      },
+      $match: { titleNormalized: { $regex: sanatizedSearch, $options: 'i' } },
     };
   }
   if (sanatizedAuthor) {
     return {
-      $search: {
-        index: 'default',
-        autocomplete: {
-          query: sanatizedAuthor,
-          path: 'authorNormalized',
-          fuzzy: fuzzySearch ? {} : undefined,
-        },
-      },
+      $match: { authorNormalized: { $regex: sanatizedAuthor, $options: 'i' } },
     };
   }
   return null;
 }
 
-/**
- * Build the `filter` clause that goes *inside* `$vectorSearch`. Only fields
- * declared as filter fields in the Atlas vector index can appear here (see the
- * plan: we declared `source` and `instock`). Returns undefined when nothing to
- * filter on so we omit the key entirely.
- */
 function buildVectorFilter(instock: boolean, exclude: string[]): any | undefined {
   const filter: any = {};
   if (instock) filter.instock = true;
@@ -223,13 +147,6 @@ function buildVectorFilter(instock: boolean, exclude: string[]): any | undefined
   return Object.keys(filter).length ? filter : undefined;
 }
 
-/**
- * Substring exact-match check against the already-sanitized search terms. We
- * want books whose normalized title literally contains the user's query to
- * float to the top regardless of RRF score - that preserves the "type the
- * exact title, get that book" expectation while embeddings expand recall.
- * Both sides are lowercased because the Python sanitizer doesn't lowercase.
- */
 function isExactMatch(
   cand: Candidate,
   sanatizedSearch: string,
@@ -245,44 +162,27 @@ function isExactMatch(
   return false;
 }
 
-/**
- * Run keyword and/or vector searches and fuse the results.
- *
- * `mode`:
- *   - 'hybrid' : run both, fuse with RRF.
- *   - 'vector' : skip keyword entirely, rank purely by vector similarity.
- *
- * Returns `null` when vector results are needed but the embedding call failed
- * (no API key, timeout, etc.) so the caller can fall back to the legacy
- * keyword-only pipeline without breaking search for the user.
- */
-async function runFusedSearch(opts: {
+async function runVectorSearch(opts: {
   booksCol: any;
-  keywordSearchStage: any | null;
   queryText: string;
   instock: boolean;
   exclude: string[];
-  postFilterStages: any[];
   sanatizedSearch: string;
   sanatizedAuthor: string;
   sort: string;
   page: number;
   show: number;
-  mode: 'hybrid' | 'vector';
 }): Promise<{ total: number; books: any[]; allPublishers: string[] } | null> {
   const {
     booksCol,
-    keywordSearchStage,
     queryText,
     instock,
     exclude,
-    postFilterStages,
     sanatizedSearch,
     sanatizedAuthor,
     sort,
     page,
     show,
-    mode,
   } = opts;
 
   const candidateProjection = {
@@ -295,41 +195,8 @@ async function runFusedSearch(opts: {
     source: 1,
   };
 
-  const runKeyword = mode === 'hybrid' && !!keywordSearchStage;
-
-  const keywordPromise: Promise<Array<Candidate & { score: number }>> = runKeyword
-    ? booksCol
-        .aggregate([
-          keywordSearchStage,
-          // Project early so postFilter $match stages and $limit don't carry
-          // 8KB/doc embeddings through the pipeline.
-          {
-            $project: {
-              ...candidateProjection,
-              instock: 1,
-              score: { $meta: 'searchScore' },
-            },
-          },
-          ...postFilterStages,
-          { $limit: CANDIDATE_LIMIT },
-          { $project: { instock: 0 } },
-        ])
-        .toArray()
-    : Promise.resolve([]);
-
-  // Kick off the query embed in parallel with the (optional) keyword search.
-  const embedPromise = embedQuery(queryText);
-
-  const [keywordResults, queryVector] = await Promise.all([
-    keywordPromise,
-    embedPromise,
-  ]);
-
-  if (!queryVector) {
-    // Embedding failed or isn't configured. Let the caller run the legacy
-    // aggregation so search still works.
-    return null;
-  }
+  const queryVector = await embedQuery(queryText);
+  if (!queryVector) return null;
 
   const vectorFilter = buildVectorFilter(instock, exclude);
   const vectorResults: Array<Candidate & { score: number }> = await booksCol
@@ -353,52 +220,27 @@ async function runFusedSearch(opts: {
     ])
     .toArray();
 
-  // Fuse the ranked lists. In 'vector' mode the keyword list is empty and this
-  // reduces to ranking purely by the vector similarity order.
-  type Fused = { cand: Candidate; rrf: number; exact: boolean };
-  const fused = new Map<string, Fused>();
+  type Ranked = { cand: Candidate; score: number; exact: boolean };
+  const ranked: Ranked[] = vectorResults.map((cand) => ({
+    cand,
+    score: cand.score,
+    exact: isExactMatch(cand, sanatizedSearch, sanatizedAuthor),
+  }));
 
-  const addRanked = (list: Array<Candidate & { score: number }>) => {
-    list.forEach((cand, rank) => {
-      const contribution = 1 / (RRF_K + rank);
-      const existing = fused.get(cand.url);
-      if (existing) {
-        existing.rrf += contribution;
-      } else {
-        fused.set(cand.url, {
-          cand,
-          rrf: contribution,
-          exact: isExactMatch(cand, sanatizedSearch, sanatizedAuthor),
-        });
-      }
-    });
-  };
-  addRanked(keywordResults);
-  addRanked(vectorResults);
-
-  const fusedList = Array.from(fused.values());
-
-  // Sort fused candidates. Exact matches always first, then:
-  //   - 'rel' -> by fused RRF score
-  //   - 'low' / 'high' -> by price
-  fusedList.sort((a, b) => {
+  ranked.sort((a, b) => {
     if (a.exact !== b.exact) return a.exact ? -1 : 1;
     if (sort === 'low') return (a.cand.price ?? 0) - (b.cand.price ?? 0);
     if (sort === 'high') return (b.cand.price ?? 0) - (a.cand.price ?? 0);
-    return b.rrf - a.rrf;
+    return b.score - a.score;
   });
 
-  const total = fusedList.length;
+  const total = ranked.length;
   const start = (page - 1) * show;
-  const pageSlice = fusedList.slice(start, start + show);
+  const pageSlice = ranked.slice(start, start + show);
 
-  // Hydrate the page we're actually returning. Preserve order from fusion.
   let books: any[] = [];
   if (pageSlice.length > 0) {
-    const urls = pageSlice.map((f) => f.cand.url);
-    // CRITICAL: explicitly drop `embedding` (1024-dim doubles, ~8KB/doc).
-    // Without this, every page render ships ~120KB of float arrays to Node
-    // and then to the client, which dominated hybrid-search latency.
+    const urls = pageSlice.map((r) => r.cand.url);
     const fullDocs = await booksCol
       .find(
         { url: { $in: urls } },
@@ -407,16 +249,13 @@ async function runFusedSearch(opts: {
       .toArray();
     const byUrl = new Map<string, any>(fullDocs.map((d: any) => [d.url, d]));
     books = pageSlice
-      .map((f) => byUrl.get(f.cand.url))
+      .map((r) => byUrl.get(r.cand.url))
       .filter((d) => !!d);
   }
 
-  // Publishers dropdown: union across the full fused candidate pool. Matches
-  // the spirit of the legacy `allPublishers` facet (publishers seen among
-  // matching books) without running a second DB round-trip.
   const publisherSet = new Set<string>();
-  for (const f of fusedList) {
-    const p = f.cand.publisher;
+  for (const r of ranked) {
+    const p = r.cand.publisher;
     if (p && typeof p === 'string') publisherSet.add(p);
   }
 
@@ -424,6 +263,52 @@ async function runFusedSearch(opts: {
     total,
     books,
     allPublishers: Array.from(publisherSet),
+  };
+}
+
+async function runRegexSearch(opts: {
+  booksCol: any;
+  matchStage: any;
+  postFilterStages: any[];
+  sort: string;
+  page: number;
+  show: number;
+}): Promise<{ total: number; books: any[]; allPublishers: string[] }> {
+  const { booksCol, matchStage, postFilterStages, sort, page, show } = opts;
+
+  const queries: any[] = [matchStage, ...postFilterStages];
+  queries.push({ $project: { embedding: 0, embeddingModel: 0 } });
+  queries.push({ $limit: CANDIDATE_LIMIT });
+  queries.push({
+    $facet: {
+      count: [{ $count: 'totalCount' }],
+      documents: [
+        {
+          $sort:
+            sort === 'rel'
+              ? { titleNormalized: 1 }
+              : { price: sort === 'low' ? 1 : -1 },
+        },
+        { $skip: (page - 1) * show },
+        { $limit: show },
+        { $project: { _id: 0 } },
+      ],
+      allPublishers: [
+        { $match: { publisher: { $exists: true, $nin: [null, ''] } } },
+        { $group: { _id: null, publishers: { $addToSet: '$publisher' } } },
+        { $project: { _id: 0, allPublishers: '$publishers' } },
+      ],
+    },
+  });
+
+  const results = await booksCol.aggregate(queries).toArray();
+  return {
+    total: results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0,
+    books: results.length > 0 ? results[0].documents : [],
+    allPublishers:
+      results.length > 0 && results[0].allPublishers.length > 0
+        ? results[0].allPublishers[0].allPublishers || []
+        : [],
   };
 }
 
@@ -444,12 +329,7 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   console.log(sanatizedSearch);
   const sanatizedAuthor = sanatizeSearch(author);
 
-  const keywordSearchStage = buildKeywordSearchStage(
-    sanatizedSearch,
-    sanatizedAuthor,
-    fuzzySearch,
-    exactSearch
-  );
+  const matchStage = buildRegexMatchStage(sanatizedSearch, sanatizedAuthor);
 
   const postFilterStages: any[] = [];
   if (instock) postFilterStages.push({ $match: { instock: true } });
@@ -460,7 +340,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   const booksCol = db.collection('books');
 
   const hasQuery = !!sanatizedSearch || !!sanatizedAuthor;
-  const wantSemantic = !exactSearch && hasQuery && SEARCH_TYPE !== 'keyword';
   const queryText = sanatizedSearch && sanatizedAuthor
     ? `${sanatizedSearch} by ${sanatizedAuthor}`
     : sanatizedSearch || sanatizedAuthor;
@@ -469,67 +348,37 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   let books: any[] = [];
   let allPublishers: string[] = [];
 
-  const semanticResult = wantSemantic
-    ? await runFusedSearch({
+  const wantVector = !exactSearch && hasQuery;
+  const vectorResult = wantVector
+    ? await runVectorSearch({
         booksCol,
-        keywordSearchStage,
         queryText,
         instock,
         exclude,
-        postFilterStages,
         sanatizedSearch,
         sanatizedAuthor,
         sort,
         page,
         show,
-        mode: SEARCH_TYPE === 'vector' ? 'vector' : 'hybrid',
       })
     : null;
 
-  if (semanticResult) {
-    total = semanticResult.total;
-    books = semanticResult.books;
-    allPublishers = semanticResult.allPublishers;
-  } else {
-    const queries: any[] = [];
-    if (keywordSearchStage) queries.push(keywordSearchStage);
-    queries.push(...postFilterStages);
-    queries.push({ $addFields: { score: { $meta: 'searchScore' } } });
-    // Drop the embedding field BEFORE $facet so neither branch carries 8KB/doc
-    // of float arrays through the pipeline.
-    queries.push({ $project: { embedding: 0, embeddingModel: 0 } });
-    // Cap candidates before $facet so count/allPublishers/documents don't scan
-    // every match (same pool size as hybrid search; total is approximate).
-    queries.push({ $limit: CANDIDATE_LIMIT });
-    queries.push({
-      $facet: {
-        count: [{ $count: 'totalCount' }],
-        documents: [
-          {
-            $sort:
-              sort === 'rel'
-                ? { score: -1 }
-                : { price: sort === 'low' ? 1 : -1 },
-          },
-          { $skip: (page - 1) * show },
-          { $limit: show },
-          { $project: { _id: 0 } },
-        ],
-        allPublishers: [
-          { $match: { publisher: { $exists: true, $nin: [null, ''] } } },
-          { $group: { _id: null, publishers: { $addToSet: '$publisher' } } },
-          { $project: { _id: 0, allPublishers: '$publishers' } },
-        ],
-      },
+  if (vectorResult) {
+    total = vectorResult.total;
+    books = vectorResult.books;
+    allPublishers = vectorResult.allPublishers;
+  } else if (matchStage) {
+    const regexResult = await runRegexSearch({
+      booksCol,
+      matchStage,
+      postFilterStages,
+      sort,
+      page,
+      show,
     });
-
-    const results = await booksCol.aggregate(queries).toArray();
-    total = results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0;
-    books = results.length > 0 ? results[0].documents : [];
-    allPublishers =
-      results.length > 0 && results[0].allPublishers.length > 0
-        ? results[0].allPublishers[0].allPublishers || []
-        : [];
+    total = regexResult.total;
+    books = regexResult.books;
+    allPublishers = regexResult.allPublishers;
   }
 
   sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
