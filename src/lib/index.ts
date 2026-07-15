@@ -65,8 +65,11 @@ const storeCountries: Record<string, string> = {
     "Anadolu Kitabevi" : "TUR",
     "Safinat Ul-Najat": "UK",
     "Islamic Bookstore": "NA",
+    "Jarir Books USA": "NA",
     "Mecca Books": "NA",
     "Turath Publishing": "UK",
+    "White Thread Press": "UK",
+    "Imam Ghazali Publishing": "NA",
 }
 
 export { storeCountries };
