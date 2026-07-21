@@ -130,9 +130,6 @@
             });
     };
 
-    // Get instock value from URL for BookCard filtering
-    $: instock = $page.url.searchParams.get("instock") !== "false";
-
     function handleToggleFilters() {
         filtersHidden = !filtersHidden;
     }
@@ -221,13 +218,11 @@
         </div>
         <div class="flex flex-wrap justify-center">
             {#each props.results as book}
-                {#if (instock && book.instock) || !instock}
-                    <BookCard
-                        {book}
-                        {loading}
-                        currency={currencies.find((c) => c.value === currency)}
-                    />
-                {/if}
+                <BookCard
+                    {book}
+                    {loading}
+                    currency={currencies.find((c) => c.value === currency)}
+                />
             {/each}
         </div>
         {#if (props.results.length > 1 || innerWidth < 768) && !loading}
@@ -302,13 +297,6 @@
                         >•</span
                     >
                     Enable "Search Description" to broaden results
-                </li>
-                <li class="flex items-start">
-                    <span
-                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
-                        >•</span
-                    >
-                    Uncheck "Hide Out of Stock" to see all books
                 </li>
             </ul>
         </div>

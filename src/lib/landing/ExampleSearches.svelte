@@ -17,7 +17,6 @@
     function runSearch(query: string) {
         const params = new URLSearchParams({
             search: query,
-            instock: "true",
             sort: "rel",
         });
         goto(`/search?${params.toString()}`);

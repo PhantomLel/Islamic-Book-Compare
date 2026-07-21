@@ -44,7 +44,6 @@
             search: $page.url.searchParams.get("search") || "",
             author: $page.url.searchParams.get("author") || "",
             sort: $page.url.searchParams.get("sort") || "rel",
-            instock: $page.url.searchParams.get("instock") !== "false",
             exactSearch: $page.url.searchParams.get("exactSearch") === "true",
             countries:
                 $page.url.searchParams.get("countries")?.split(",").filter((c) => c) || [],
@@ -56,7 +55,6 @@
     let search = initial?.search ?? initialSearch;
     let author = initial?.author ?? initialAuthor;
     let sortByValue = initial?.sort ?? "rel";
-    let instock = initial?.instock ?? true;
     let exactSearch = initial?.exactSearch ?? false;
     let selectedCountries: string[] = initial?.countries ?? [];
 
@@ -74,7 +72,6 @@
             search = to.url.searchParams.get("search") || "";
             author = to.url.searchParams.get("author") || "";
             sortByValue = to.url.searchParams.get("sort") || "rel";
-            instock = to.url.searchParams.get("instock") !== "false";
             exactSearch = to.url.searchParams.get("exactSearch") === "true";
             selectedCountries =
                 to.url.searchParams.get("countries")?.split(",").filter((c) => c) || [];
@@ -197,12 +194,7 @@
             query.set("search", trimmedSearch);
             query.set("author", trimmedAuthor);
             query.set("sort", sortByValue);
-            
-            if (!instock) {
-                query.set("instock", instock.toString());
-            } else {
-                query.delete("instock");
-            }
+            query.delete("instock");
 
             if (exactSearch) {
                 query.set("exactSearch", exactSearch.toString());
@@ -395,10 +387,6 @@
                 />
             </div>
             <div class="flex flex-col gap-3">
-                <Checkbox bind:checked={instock} on:change={() => updateSearch()}>
-                    Hide Out of Stock
-                </Checkbox>
-
                 <Checkbox bind:checked={exactSearch} on:change={() => updateSearch()}>
                     Match Exact Search
                 </Checkbox>

@@ -58,7 +58,7 @@ const sanatizeSearch = (search: string) => {
 
 let stores: string[] = [];
 
-const sendUsageAlert = async (request: Request, search: string, author: string, page: number, show: number, sort: string, instock: boolean, exclude: string[], fuzzySearch: boolean, total: number, exactSearch: boolean) => {
+const sendUsageAlert = async (request: Request, search: string, author: string, page: number, show: number, sort: string, exclude: string[], fuzzySearch: boolean, total: number, exactSearch: boolean) => {
 
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'Unknown IP';
   const userAgent = request.headers.get('user-agent') || 'Unknown User Agent';
@@ -66,7 +66,7 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
   const message = `*Book Search Alert*
 
 • Search: ${search}
-• Link: https://kitaabfinder.com/search?search=${encodeURIComponent(search)}&author=${encodeURIComponent(author)}&page=${page}&show=${show}&sort=${sort}&instock=${instock}&exclude=${exclude.join(',')}&fuzzy=${fuzzySearch}&exactSearch=${exactSearch}
+• Link: https://kitaabfinder.com/search?search=${encodeURIComponent(search)}&author=${encodeURIComponent(author)}&page=${page}&show=${show}&sort=${sort}&exclude=${exclude.join(',')}&fuzzy=${fuzzySearch}&exactSearch=${exactSearch}
 
 📍 *Client Info:*
 • IP: https://ipinfo.io/${ip}
@@ -77,7 +77,6 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
 • Page: \`${page}\`
 • Show: \`${show}\` results
 • Sort: \`${sort}\`
-• In Stock Only: ${instock ? '✅ Yes' : '❌ No'}
 • Exclude Stores: ${exclude.length > 0 ? exclude.join(', ') : 'None'}
 • Exact Search: ${exactSearch ? '✅ Enabled' : '❌ Disabled'}
 • Fuzzy Search: ${fuzzySearch ? '✅ Enabled' : '❌ Disabled'}
@@ -101,7 +100,6 @@ const sendUsageAlert = async (request: Request, search: string, author: string, 
       page,
       show,
       sort,
-      instock,
       exclude,
       fuzzySearch,
       exactSearch,
@@ -140,11 +138,9 @@ function buildRegexMatchStage(
   return null;
 }
 
-function buildVectorFilter(instock: boolean, exclude: string[]): any | undefined {
-  const filter: any = {};
-  if (instock) filter.instock = true;
-  if (exclude.length > 0) filter.source = { $nin: exclude };
-  return Object.keys(filter).length ? filter : undefined;
+function buildVectorFilter(exclude: string[]): any | undefined {
+  if (exclude.length === 0) return undefined;
+  return { source: { $nin: exclude } };
 }
 
 function isExactMatch(
@@ -165,7 +161,6 @@ function isExactMatch(
 async function runVectorSearch(opts: {
   booksCol: any;
   queryText: string;
-  instock: boolean;
   exclude: string[];
   sanatizedSearch: string;
   sanatizedAuthor: string;
@@ -176,7 +171,6 @@ async function runVectorSearch(opts: {
   const {
     booksCol,
     queryText,
-    instock,
     exclude,
     sanatizedSearch,
     sanatizedAuthor,
@@ -198,7 +192,7 @@ async function runVectorSearch(opts: {
   const queryVector = await embedQuery(queryText);
   if (!queryVector) return null;
 
-  const vectorFilter = buildVectorFilter(instock, exclude);
+  const vectorFilter = buildVectorFilter(exclude);
   const vectorResults: Array<Candidate & { score: number }> = await booksCol
     .aggregate([
       {
@@ -320,7 +314,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   const page = parseInt(url.searchParams.get('page') || '1');
   const show = parseInt(url.searchParams.get('show') || '15');
   const sort = url.searchParams.get('sort') || 'rel';
-  const instock = url.searchParams.get('instock') !== 'false';
   const exclude = url.searchParams.getAll('exclude');
   const fuzzySearch = url.searchParams.get('fuzzy') === 'true';
   const exactSearch = url.searchParams.get('exactSearch') === 'true';
@@ -332,7 +325,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   const matchStage = buildRegexMatchStage(sanatizedSearch, sanatizedAuthor);
 
   const postFilterStages: any[] = [];
-  if (instock) postFilterStages.push({ $match: { instock: true } });
   if (exclude.length > 0) {
     postFilterStages.push({ $match: { source: { $not: { $in: exclude } } } });
   }
@@ -353,7 +345,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
     ? await runVectorSearch({
         booksCol,
         queryText,
-        instock,
         exclude,
         sanatizedSearch,
         sanatizedAuthor,
@@ -381,7 +372,7 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
     allPublishers = regexResult.allPublishers;
   }
 
-  sendUsageAlert(request, search, author, page, show, sort, instock, exclude, fuzzySearch, total, exactSearch);
+  sendUsageAlert(request, search, author, page, show, sort, exclude, fuzzySearch, total, exactSearch);
 
   return {
     results: books,
