@@ -138,9 +138,12 @@ function buildRegexMatchStage(
   return null;
 }
 
-function buildVectorFilter(exclude: string[]): any | undefined {
-  if (exclude.length === 0) return undefined;
-  return { source: { $nin: exclude } };
+function buildVectorFilter(exclude: string[]): { instock: true; source?: { $nin: string[] } } {
+  const filter: { instock: true; source?: { $nin: string[] } } = { instock: true };
+  if (exclude.length > 0) {
+    filter.source = { $nin: exclude };
+  }
+  return filter;
 }
 
 function isExactMatch(
@@ -202,7 +205,7 @@ async function runVectorSearch(opts: {
           queryVector,
           numCandidates: VECTOR_NUM_CANDIDATES,
           limit: CANDIDATE_LIMIT,
-          ...(vectorFilter ? { filter: vectorFilter } : {}),
+          filter: vectorFilter,
         },
       },
       {
@@ -324,7 +327,7 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
 
   const matchStage = buildRegexMatchStage(sanatizedSearch, sanatizedAuthor);
 
-  const postFilterStages: any[] = [];
+  const postFilterStages: any[] = [{ $match: { instock: true } }];
   if (exclude.length > 0) {
     postFilterStages.push({ $match: { source: { $not: { $in: exclude } } } });
   }

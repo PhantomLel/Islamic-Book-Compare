@@ -24,7 +24,7 @@
 </script>
 
 <div class="examples">
-    <span class="examples__label">Start with</span>
+    <span class="examples__label">Try these</span>
     <div class="examples__chips">
         {#each examples as ex}
             <button

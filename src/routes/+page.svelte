@@ -69,9 +69,6 @@
 
     <!-- Stores marquee -->
     <footer class="hero__footer">
-        <p class="footer__caption">
-            {storeCount} bookstores &middot; {countryCount} countries
-        </p>
         <StoreMarquee />
     </footer>
 </div>
