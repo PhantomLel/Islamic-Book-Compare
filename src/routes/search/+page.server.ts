@@ -11,7 +11,6 @@ const VECTOR_INDEX_NAME = 'vector_index';
 type Candidate = {
     url: string;
     price: number;
-    publisher?: string | null;
     titleNormalized?: string | null;
     authorNormalized?: string | null;
     source?: string | null;
@@ -170,7 +169,7 @@ async function runVectorSearch(opts: {
   sort: string;
   page: number;
   show: number;
-}): Promise<{ total: number; books: any[]; allPublishers: string[] } | null> {
+}): Promise<{ total: number; books: any[] } | null> {
   const {
     booksCol,
     queryText,
@@ -186,7 +185,6 @@ async function runVectorSearch(opts: {
     _id: 0,
     url: 1,
     price: 1,
-    publisher: 1,
     titleNormalized: 1,
     authorNormalized: 1,
     source: 1,
@@ -250,16 +248,9 @@ async function runVectorSearch(opts: {
       .filter((d) => !!d);
   }
 
-  const publisherSet = new Set<string>();
-  for (const r of ranked) {
-    const p = r.cand.publisher;
-    if (p && typeof p === 'string') publisherSet.add(p);
-  }
-
   return {
     total,
     books,
-    allPublishers: Array.from(publisherSet),
   };
 }
 
@@ -270,7 +261,7 @@ async function runRegexSearch(opts: {
   sort: string;
   page: number;
   show: number;
-}): Promise<{ total: number; books: any[]; allPublishers: string[] }> {
+}): Promise<{ total: number; books: any[] }> {
   const { booksCol, matchStage, postFilterStages, sort, page, show } = opts;
 
   const queries: any[] = [matchStage, ...postFilterStages];
@@ -290,11 +281,6 @@ async function runRegexSearch(opts: {
         { $limit: show },
         { $project: { _id: 0 } },
       ],
-      allPublishers: [
-        { $match: { publisher: { $exists: true, $nin: [null, ''] } } },
-        { $group: { _id: null, publishers: { $addToSet: '$publisher' } } },
-        { $project: { _id: 0, allPublishers: '$publishers' } },
-      ],
     },
   });
 
@@ -302,10 +288,6 @@ async function runRegexSearch(opts: {
   return {
     total: results.length > 0 ? results[0].count[0]?.totalCount || 0 : 0,
     books: results.length > 0 ? results[0].documents : [],
-    allPublishers:
-      results.length > 0 && results[0].allPublishers.length > 0
-        ? results[0].allPublishers[0].allPublishers || []
-        : [],
   };
 }
 
@@ -340,7 +322,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
 
   let total = 0;
   let books: any[] = [];
-  let allPublishers: string[] = [];
 
   const wantVector = !exactSearch && hasQuery;
   const vectorResult = wantVector
@@ -359,7 +340,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   if (vectorResult) {
     total = vectorResult.total;
     books = vectorResult.books;
-    allPublishers = vectorResult.allPublishers;
   } else if (matchStage) {
     const regexResult = await runRegexSearch({
       booksCol,
@@ -371,7 +351,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
     });
     total = regexResult.total;
     books = regexResult.books;
-    allPublishers = regexResult.allPublishers;
   }
 
   sendUsageAlert(request, search, author, page, show, sort, exclude, fuzzySearch, total, exactSearch);
@@ -381,7 +360,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
     total,
     start: (page - 1) * show + 1,
     end: Math.min(page * show, total),
-    allPublishers,
   };
 }
 
