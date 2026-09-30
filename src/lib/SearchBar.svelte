@@ -317,7 +317,7 @@
                 <BookOutline class="h-4 w-4 mr-2" />
                 Lists
             </Button>
-            <!-- <Button
+            <Button
                 on:click={handleFiltersClick}
                 outline={false}
                 class="mt-3 relative px-3"
@@ -334,7 +334,7 @@
                         ></span>
                     </span>
                 {/if}
-            </Button> -->
+            </Button>
             <div>
                 <Select
                     on:change={() => updateSearch()}

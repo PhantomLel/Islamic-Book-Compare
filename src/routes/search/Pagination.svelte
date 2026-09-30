@@ -13,6 +13,10 @@
 
     export let pageNum: number;
     export let show: number = 15;
+    // True when the keyword search hit its cap, so the real total may be higher.
+    export let totalCapped: boolean = false;
+
+    $: lastPage = Math.max(1, Math.ceil(helper.total / show));
 
     const setPage = (p: number) => {
         let query = new URLSearchParams($page.url.searchParams.toString());
@@ -34,7 +38,9 @@
         to
         <span class="font-semibold text-white">{helper.end}</span>
         of
-        <span class="font-semibold text-white">{helper.total}</span>
+        <span class="font-semibold text-white"
+            >{helper.total}{totalCapped ? "+" : ""}</span
+        >
         Entries
     </div>
 
@@ -50,8 +56,8 @@
                 Prev
             </button>
             <button
-                disabled={helper.end === helper.total}
-                on:click={() => setPage(pageNum + 1 > helper.end ? pageNum : pageNum + 1)}
+                disabled={pageNum >= lastPage}
+                on:click={() => setPage(pageNum + 1)}
                 slot="next"
                 class="flex items-center gap-2 text-white bg-gray-800"
             >

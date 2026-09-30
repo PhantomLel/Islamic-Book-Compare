@@ -6,10 +6,13 @@
 
 import { Binary } from 'mongodb';
 import getDb from '$lib/server/db';
+import {
+    VECTOR_INDEX_NAME,
+    VECTOR_LIMIT,
+    VECTOR_NUM_CANDIDATES
+} from '$lib/server/search/vector';
 
 const INTERVAL_MS = 3 * 60 * 1000;
-const VECTOR_INDEX_NAME = 'vector_index';
-const VECTOR_NUM_CANDIDATES = 200;
 
 type WarmerState = {
     timer?: ReturnType<typeof setInterval>;
@@ -59,7 +62,7 @@ async function warmVectorIndex() {
                     path: 'embedding',
                     queryVector: state.queryVector,
                     numCandidates: VECTOR_NUM_CANDIDATES,
-                    limit: 100,
+                    limit: VECTOR_LIMIT,
                     filter: { instock: true },
                 },
             },

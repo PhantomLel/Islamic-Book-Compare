@@ -2,6 +2,10 @@
 
 export { default as SearchBar } from './SearchBar.svelte';
 
+// One store's listing of a book. A search result groups listings of the same
+// book; the cheapest is the top-level `Book`, the rest are `offers`.
+export type Offer = { source: string; price: number | null; url: string; instock: boolean };
+
 export type Book = {
     id: number;
     title: string;
@@ -12,6 +16,7 @@ export type Book = {
     url: string;
     source: string;
     instock: boolean;
+    offers?: Offer[];
 }
 // A lightweight snapshot of a book saved into a collection. We persist enough
 // to always render the card, even if the book later disappears from the catalog

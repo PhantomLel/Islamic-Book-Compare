@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Book } from "$lib";
+    import type { Book, Offer } from "$lib";
     import TextPlaceholder from "flowbite-svelte/TextPlaceholder.svelte";
     import Button from "flowbite-svelte/Button.svelte";
     import BookmarkOutline from "flowbite-svelte-icons/BookmarkOutline.svelte";
@@ -47,7 +47,37 @@
         collection.books.some((b) => b.url === book.url),
     );
 
-    const handleBookClick = (book: Book) => {
+    // Other stores selling the same book (the card itself shows the cheapest).
+    const VISIBLE_OFFERS = 3;
+    let showAllOffers = false;
+    let offersForUrl = "";
+
+    $: offers = book.offers ?? [];
+    $: visibleOffers = showAllOffers ? offers : offers.slice(0, VISIBLE_OFFERS);
+    $: hiddenOfferCount = offers.length - visibleOffers.length;
+    // Cards are reused across pages, so collapse the list when the book changes.
+    $: if (book.url !== offersForUrl) {
+        offersForUrl = book.url;
+        showAllOffers = false;
+    }
+
+    // Declared reactively so offer prices re-render when the currency changes.
+    $: formatPrice = (price: number | null | undefined) =>
+        `${currency.value !== "USD" ? "~" : ""}${currency.symbol}${
+            price == null
+                ? "N/A"
+                : (parseFloat(price.toString()) * currency.rate).toFixed(2)
+        }`;
+
+    type ClickInfo = {
+        title: string;
+        author: string;
+        url: string;
+        price: number | null;
+        source: string;
+    };
+
+    const trackClick = (info: ClickInfo) => {
         fetch("/api/book-clicked", {
             method: "POST",
             headers: {
@@ -55,11 +85,11 @@
                 Accept: "application/json",
             },
             body: JSON.stringify({
-                bookTitle: book.title,
-                bookAuthor: book.author,
-                bookUrl: book.url,
-                bookPrice: book.price,
-                bookSource: book.source,
+                bookTitle: info.title,
+                bookAuthor: info.author,
+                bookUrl: info.url,
+                bookPrice: info.price,
+                bookSource: info.source,
             }),
         })
             .then((response) => response.json())
@@ -69,9 +99,31 @@
             .catch((error) => {
                 console.error("Failed to track book click:", error);
             });
+    };
+
+    const handleBookClick = (book: Book) => {
+        trackClick({
+            title: book.title,
+            author: book.author,
+            url: book.url,
+            price: book.price,
+            source: book.source,
+        });
 
         // open the book in a new tab
         window.open(book.url, "_blank");
+    };
+
+    // The anchor opens the offer itself; we only record the click. The parent
+    // card's click/keydown handlers are stopped in the template.
+    const handleOfferClick = (offer: Offer) => {
+        trackClick({
+            title: book.title,
+            author: book.author,
+            url: offer.url,
+            price: offer.price,
+            source: offer.source,
+        });
     };
 
 
@@ -131,6 +183,37 @@
                     ? "N/A"
                     : (parseFloat(book.price.toString()) * currency.rate).toFixed(2)}
             </p>
+            {#if offers.length > 0}
+                <div class="mt-2 text-xs text-slate-400">
+                    <p class="font-semibold text-slate-300">Also at:</p>
+                    <ul class="mt-1 space-y-0.5">
+                        {#each visibleOffers as offer}
+                            <li>
+                                <a
+                                    href={offer.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="hover:text-white hover:underline"
+                                    on:click|stopPropagation={() => handleOfferClick(offer)}
+                                    on:keydown|stopPropagation={() => {}}
+                                >
+                                    {offer.source} – {formatPrice(offer.price)}
+                                </a>
+                            </li>
+                        {/each}
+                    </ul>
+                    {#if hiddenOfferCount > 0}
+                        <button
+                            type="button"
+                            class="mt-1 text-purple-400 hover:text-purple-300 hover:underline"
+                            on:click|stopPropagation={() => (showAllOffers = true)}
+                            on:keydown|stopPropagation={() => {}}
+                        >
+                            +{hiddenOfferCount} more
+                        </button>
+                    {/if}
+                </div>
+            {/if}
             <p class="mt-4">
                 {#if book.instock}
                     <span class=" text-sm text-green-500 font-semibold"

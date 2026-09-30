@@ -11,7 +11,8 @@
  */
 
 const VOYAGE_ENDPOINT = 'https://api.voyageai.com/v1/embeddings';
-const DEFAULT_MODEL = process.env.VOYAGE_MODEL || 'voyage-4-large';
+/** Model used for query embeddings; also part of the embedding cache key. */
+export const EMBED_MODEL = process.env.VOYAGE_MODEL || 'voyage-4-large';
 const DEFAULT_TIMEOUT_MS = 4000;
 
 /**
@@ -46,7 +47,7 @@ export async function embedQuery(
             },
             body: JSON.stringify({
                 input: [trimmed],
-                model: opts.model ?? DEFAULT_MODEL,
+                model: opts.model ?? EMBED_MODEL,
                 input_type: 'query',
             }),
             signal: controller.signal,

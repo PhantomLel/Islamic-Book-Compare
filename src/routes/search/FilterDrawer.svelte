@@ -91,7 +91,7 @@
                 bind:checked={fuzzy}
                 on:change={() => updateSearch()}
             >
-                Use fuzzy search
+                Fuzzy search (tolerate one typo per word)
             </Checkbox>
         </div>
     {/if}
@@ -103,7 +103,7 @@
                 bind:checked={searchDesc}
                 on:change={() => updateSearch()}
             >
-                Search Description
+                Also search descriptions
             </Checkbox>
         </div>
     {/if}

@@ -52,6 +52,7 @@
     $: hasActiveFilters = {
         hasExcludedStores: $page.url.searchParams.getAll("exclude").length > 0,
         hasFuzzySearch: $page.url.searchParams.get("fuzzy") === "true",
+        hasSearchDesc: $page.url.searchParams.get("searchDesc") === "true",
         notDefaultShow:
             $page.url.searchParams.get("show") &&
             $page.url.searchParams.get("show") !== "15",
@@ -60,13 +61,19 @@
     $: hasAnyActiveFilter =
         hasActiveFilters.hasExcludedStores ||
         hasActiveFilters.hasFuzzySearch ||
+        hasActiveFilters.hasSearchDesc ||
         !!hasActiveFilters.notDefaultShow;
 
     let loading = false;
     let feedBackSent = 1;
     let filtersHidden = true;
 
-    let show = parseInt($page.url.searchParams.get("show") ?? "15");
+    // Mirrors the server: only these page sizes are honoured, anything else is 15.
+    const parseShow = (value: string | null) => {
+        const n = parseInt(value ?? "");
+        return n === 45 || n === 75 ? n : 15;
+    };
+    let show = parseShow($page.url.searchParams.get("show"));
 
     const currencies = [
         { value: "USD", name: "USD", rate: 1, symbol: "$" },
@@ -77,13 +84,6 @@
     ];
 
     let currency = $page.url.hash.split("#")[1] || "USD";
-
-    function clampPageNum(total: number): number {
-        const maxPage = Math.max(1, Math.ceil(total / show));
-        const current = parseInt($page.url.searchParams.get("page") ?? "1");
-        if (current < 1 || current > maxPage) return maxPage;
-        return current;
-    }
 
     afterNavigate(() => {
         loading = false;
@@ -157,7 +157,7 @@
         <SearchResultsSkeleton count={show} />
     {:then props}
         <div class="flex justify-center">
-            {#if props.results.length === 0}
+            {#if props.total === 0}
                 <div
                     class="flex flex-col items-center justify-center min-h-[400px] px-4"
                 >
@@ -206,12 +206,13 @@
                 </div>
             {:else}
                 <Pagination
-                    pageNum={clampPageNum(props.total)}
+                    pageNum={props.page}
                     helper={{
                         start: props.start,
                         end: props.end,
                         total: props.total,
                     }}
+                    totalCapped={props.totalCapped}
                     {show}
                 />
             {/if}
@@ -227,12 +228,13 @@
         </div>
         {#if (props.results.length > 1 || innerWidth < 768) && !loading}
             <Pagination
-                pageNum={clampPageNum(props.total)}
+                pageNum={props.page}
                 helper={{
                     start: props.start,
                     end: props.end,
                     total: props.total,
                 }}
+                totalCapped={props.totalCapped}
                 {show}
             />
         {/if}
@@ -296,7 +298,15 @@
                         class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
                         >•</span
                     >
-                    Enable "Search Description" to broaden results
+                    Enable "Also search descriptions" (in Filters) to broaden results
+                </li>
+                <li class="flex items-start">
+                    <span
+                        class="text-purple-600 dark:text-purple-400 mr-2 font-bold"
+                        >•</span
+                    >
+                    Word order and common spellings (Bukhari / Bukharee /
+                    البخاري) are handled automatically
                 </li>
             </ul>
         </div>
