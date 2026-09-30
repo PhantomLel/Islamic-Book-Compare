@@ -322,7 +322,6 @@ async function loadSearchProps({ url, request }: { url: URL; request: Request })
   const exactSearch = url.searchParams.get('exactSearch') === 'true';
 
   const sanatizedSearch = sanatizeSearch(search);
-  console.log(sanatizedSearch);
   const sanatizedAuthor = sanatizeSearch(author);
 
   const matchStage = buildRegexMatchStage(sanatizedSearch, sanatizedAuthor);
