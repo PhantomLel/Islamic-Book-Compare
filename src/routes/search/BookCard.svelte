@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Book, Offer } from "$lib";
+    import { storeCountryLabel } from "$lib/store-countries";
     import TextPlaceholder from "flowbite-svelte/TextPlaceholder.svelte";
     import Button from "flowbite-svelte/Button.svelte";
     import BookmarkOutline from "flowbite-svelte-icons/BookmarkOutline.svelte";
@@ -172,9 +173,12 @@
                     {book.publisher}
                 </p>
             {/if}
-            <p class="sm:text-sm text-sm mt-2 text-slate-500 font-semibold flex items-center gap-1.5">
+            <p class="sm:text-sm text-sm mt-2 text-slate-500 font-semibold flex items-center gap-1.5 flex-wrap">
                 <StoreOutline class="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                {book.source}
+                <span>{book.source}</span>
+                {#if storeCountryLabel(book.source)}
+                    <span class="font-normal text-slate-400 whitespace-nowrap">({storeCountryLabel(book.source)})</span>
+                {/if}
             </p>
             <p
                 class="sm:text-sm text-lg mt-2 text-white font-bold align-text-bottom"
@@ -197,7 +201,7 @@
                                     on:click|stopPropagation={() => handleOfferClick(offer)}
                                     on:keydown|stopPropagation={() => {}}
                                 >
-                                    {offer.source} – {formatPrice(offer.price)}
+                                    {offer.source}{#if storeCountryLabel(offer.source)} ({storeCountryLabel(offer.source)}){/if} – {formatPrice(offer.price)}
                                 </a>
                             </li>
                         {/each}
