@@ -75,6 +75,7 @@ const storeCountries: Record<string, string> = {
     "Turath Publishing": "UK",
     "White Thread Press": "UK",
     "Imam Ghazali Publishing": "NA",
+    "Mawlana Books": "NA",
 }
 
 export { storeCountries };
