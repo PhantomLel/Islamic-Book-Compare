@@ -35,6 +35,7 @@ const ALLOWED_IMAGE_HOST_SUFFIXES = [
 	'almuttaqin.co.uk',
 	'maktabahalhidayah.com',
 	'safinatulnajat.com',
+	'assubkibooks.co.uk',
 ];
 
 function isBlockedHost(hostname: string): boolean {

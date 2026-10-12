@@ -31,6 +31,7 @@ const storeCountries: Record<string, string> = {
     "White Thread Press": "UK",
     "Imam Ghazali Publishing": "NA",
     "Mawlana Books": "NA",
+    "As-Subki Books": "UK",
 }
 
 /** Region code for a store name (`UK`, `NA`, `TUR`), or undefined when unmapped. */
